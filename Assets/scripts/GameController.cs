@@ -7,29 +7,38 @@ public class GameController : MonoBehaviour
 {
     public GameObject SpawnPosition;
     public GameObject background;
+    public GameObject RestartButton;
     public GameObject player;
+    private bool alive = true;
     // Start is called before the first frame update
     void Start()
     {
-
+        //background.SetActive(false);
+        Cursor.visible = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(player.transform.position.y < 0)
+        if (alive)
         {
-            //Restart
-            //Stop Scene
-            Time.timeScale = 0;
-            Cursor.visible = true;
-            background.SetActive(true);
-            ReloadScene();
+            if (player.transform.position.y < 0)
+            {
+                alive = false;
+                //Restart
+                //Stop Scene
+                Cursor.visible = true;
+                Debug.LogWarning("RESTART");
+                Time.timeScale = 0;
+                RestartButton.SetActive(true);
+                background.SetActive(true);
+                //ReloadScene();
 
-        }
-        else
-        {
-            Time.timeScale = 1;
+            }
+            else
+            {
+                Time.timeScale = 1;
+            }
         }
     }
 

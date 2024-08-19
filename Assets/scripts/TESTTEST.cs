@@ -148,7 +148,7 @@ public class TESTTEST : MonoBehaviour
             {
                 // Ändern der Farbe des Materials
                 ren.material.SetColor("_Color", Color.blue);
-                Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
+                //Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
             }
             else
             {
@@ -164,11 +164,12 @@ public class TESTTEST : MonoBehaviour
             // Überprüfen, ob die Position des Objekts innerhalb der Toleranz liegt
             if (Vector3.Distance(obj.transform.position, new Vector3(position.x+0.5f, position.y, position.z+0.5f)) < 1f)
             {
-                Debug.LogWarning("Objekt GEFUNDEN!!! " + position);
+                //Debug.Log("Objekt GEFUNDEN!!! " + position);
                 return obj; // GameObject gefunden
             }
         }
         Debug.LogWarning("FEHLER bei Objekt Suche mit Objekt: " + position);
+
         return null;
     }
 
