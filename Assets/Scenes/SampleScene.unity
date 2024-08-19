@@ -1442,7 +1442,7 @@ MonoBehaviour:
   maxVerticalDistance: 1
   maxHorizontalDistance: 3
   edgeDetectionRadius: 0.2
-  ColorChange: 0
+  ColorChange: 1
   collisionMask:
     serializedVersion: 2
     m_Bits: 0

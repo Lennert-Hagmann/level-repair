@@ -360,6 +360,7 @@ public class WorldGeneration : MonoBehaviour
                 GameObject Top = Instantiate(tile, new Vector3(p.getX(), height, p.getY()), Quaternion.identity);
                 Last = Top;
                 Top.layer = 7;
+                NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
                 if (!isSpawned)
                 {
 

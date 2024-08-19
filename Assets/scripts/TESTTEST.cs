@@ -18,14 +18,14 @@ public class TESTTEST : MonoBehaviour
     {
 
         
-        surface.BuildNavMesh();
-        Vector3 startPosition = new Vector3(0, 0, 0); //player.transform.position;
+        //surface.BuildNavMesh();
+        //Vector3 startPosition = new Vector3(0, 0, 0); //player.transform.position;
         //Debug.Log(IsPositionReachableOnNavMesh(startPosition, new Vector3(1, 1, 2)));
 
         // Stelle sicher, dass das NavMesh auf dem NavMeshSurface erstellt wurde
-        surface.BuildNavMesh();
+        //surface.BuildNavMesh();
 
-        GenerateNavMeshLinks(startPosition);
+        //GenerateNavMeshLinks(startPosition);
     }
 
 
@@ -148,7 +148,7 @@ public class TESTTEST : MonoBehaviour
             {
                 // Ändern der Farbe des Materials
                 ren.material.SetColor("_Color", Color.blue);
-                Debug.Log("BLAU GEFÄRBT");
+                Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
             }
             else
             {
@@ -164,11 +164,11 @@ public class TESTTEST : MonoBehaviour
             // Überprüfen, ob die Position des Objekts innerhalb der Toleranz liegt
             if (Vector3.Distance(obj.transform.position, new Vector3(position.x+0.5f, position.y, position.z+0.5f)) < 1f)
             {
-                Debug.Log("Objekt GEFUNDEN!!! " + position);
+                Debug.LogWarning("Objekt GEFUNDEN!!! " + position);
                 return obj; // GameObject gefunden
             }
         }
-        Debug.Log("FEHLER bei Objekt Suche mit Objekt: " + position);
+        Debug.LogWarning("FEHLER bei Objekt Suche mit Objekt: " + position);
         return null;
     }
 
