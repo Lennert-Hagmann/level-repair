@@ -1086,6 +1086,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spawnPosition: {fileID: 594702075}
   tile: {fileID: 91341454588760603, guid: b15f826d412ebca4d94d7ad5d5cb2e22, type: 3}
+  end_tile: {fileID: 91341454588760603, guid: 3c7a89e36cb54d545ae41e5effbea22b, type: 3}
   surface: {fileID: 1262786669}
   debugCheck: 0
   player: {fileID: 2086308168}

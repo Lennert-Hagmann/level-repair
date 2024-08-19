@@ -14,6 +14,7 @@ public class WorldGeneration : MonoBehaviour
 
     public Transform spawnPosition;
     public GameObject tile;
+    public GameObject end_tile;
 
     //navmesh
     public NavMeshSurface surface;
@@ -43,14 +44,24 @@ public class WorldGeneration : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        PlayerReachedGoal();
+    }
+
+    public bool PlayerReachedGoal()
+    {
+        if (Vector3.Distance(Last.transform.position, player.transform.position) < 1f)
+        {
+            Debug.LogWarning("Spieler hat Ziel erreicht");
+            return true;
+        }
+        return false;
     }
 
     public GameObject NavMeshLinkScript;
 
     private void Start()
     {
-        diamond_square(33,0,10,0,1);
+        diamond_square(33, 0, 10, 0, 1);
         createTiles();
 
         //diamond_step(testmap, new PositionPoint(0, 0, 0), new PositionPoint(0, 2, 2), new PositionPoint(2, 0, 3), new PositionPoint(2, 2, 5),  testoffset, testvalues);
@@ -112,7 +123,8 @@ public class WorldGeneration : MonoBehaviour
 
             foreach (Vector3 possiblePosition in possiblePositions)
             {
-                if (IsPositionOnNavMesh(possiblePosition)){
+                if (IsPositionOnNavMesh(possiblePosition))
+                {
                     // Prüfe, ob die Position auf dem gleichen NavMeshSurface liegt
                     if (IsPositionOnSameMesh(possiblePosition, startPosition))
                     {
@@ -132,7 +144,7 @@ public class WorldGeneration : MonoBehaviour
                         }
                     }
                 }
-                
+
             }
         }
     }
@@ -164,8 +176,8 @@ public class WorldGeneration : MonoBehaviour
     {
         float verticalDistance = Mathf.Abs(to.y - from.y);
         float horizontalDistance = Vector3.Distance(new Vector3(to.x, 0, to.z), new Vector3(from.x, 0, from.z));
-        Debug.Log("VERTIKALE DISTANZ: " + verticalDistance +" ,   HORIZONTALE DISTANZ: "+ horizontalDistance);
-        return verticalDistance <= maxVerticalDistance && horizontalDistance <= maxHorizontalDistance && horizontalDistance>0;
+        Debug.Log("VERTIKALE DISTANZ: " + verticalDistance + " ,   HORIZONTALE DISTANZ: " + horizontalDistance);
+        return verticalDistance <= maxVerticalDistance && horizontalDistance <= maxHorizontalDistance && horizontalDistance > 0;
     }
 
     void CreateNavMeshLink(Vector3 start, Vector3 end)
@@ -307,13 +319,13 @@ public class WorldGeneration : MonoBehaviour
         int count = values.Count();
 
         map = new PositionPoint[maplength, maplength];
-        for (int i =0; i < maplength; i++)
+        for (int i = 0; i < maplength; i++)
         {
-            for(int j = 0; j<maplength; j++)
+            for (int j = 0; j < maplength; j++)
             {
-                if(i==0 &  j==0 | i==0 & j==maplength-1 | i==maplength-1 & j==0 | i == maplength-1 & j == maplength - 1)
+                if (i == 0 & j == 0 | i == 0 & j == maplength - 1 | i == maplength - 1 & j == 0 | i == maplength - 1 & j == maplength - 1)
                 {
-                    map[i, j] = new PositionPoint(i, j, values.ElementAt(UnityEngine.Random.Range(0,count)));   //weise den Eckwerten der Map einen Value zu
+                    map[i, j] = new PositionPoint(i, j, values.ElementAt(UnityEngine.Random.Range(0, count)));   //weise den Eckwerten der Map einen Value zu
                 }
                 else
                 {
@@ -323,32 +335,35 @@ public class WorldGeneration : MonoBehaviour
                 {
                     map[i, j].log();
                 }
-                
+
             }
-            
+
         }
-        
+
     }
+
+    GameObject Last = null;
     private void createTiles()
     {
         bool isSpawned = false;
-        foreach(PositionPoint p in map)
+        foreach (PositionPoint p in map)
         {
 
             int height = p.getValue();
-            if(height > 2 && height != 5 && height != 8)
+            if (height > 2 && height != 5 && height != 8)
             {
                 for (int i = 0; i < height; i++)
                 {
                     NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
-                    
+
                 }
                 GameObject Top = Instantiate(tile, new Vector3(p.getX(), height, p.getY()), Quaternion.identity);
+                Last = Top;
                 Top.layer = 7;
                 if (!isSpawned)
                 {
-                    
-                    spawnPosition.position = new Vector3(p.getX(), height+1, p.getY());
+
+                    spawnPosition.position = new Vector3(p.getX(), height + 1, p.getY());
                     //spawnPosition.rotation = Quaternion.Euler(0,210,0);
                     isSpawned = true;
                     player.transform.position = spawnPosition.position;
@@ -357,7 +372,13 @@ public class WorldGeneration : MonoBehaviour
             }
 
         }
+        //Debug.LogWarning(" Postion des letzten " + Last.transform.position);
+        Destroy(Last);
+        Last = Instantiate(end_tile, Last.transform.position, Quaternion.identity);
+        Last.layer = 7;
+
     }
+
 
 
     private void LogMap()
@@ -366,13 +387,13 @@ public class WorldGeneration : MonoBehaviour
         {
             for (int j = 0; j < maplength; j++)
             {
-               map[i, j].log();
+                map[i, j].log();
             }
         }
     }
 
 
-    
+
 
     private void diamond_square(int testlength, int minValue, int maxValue, int minOffset, int maxOffset)
     {
@@ -384,7 +405,7 @@ public class WorldGeneration : MonoBehaviour
             values.Add(i);
 
         }
-        
+
         //erstelle Map
         createMap(values, testlength);
 
@@ -395,7 +416,7 @@ public class WorldGeneration : MonoBehaviour
             offset.Add(i);
         }
 
-        
+
         int Abstand = (maplength - 1) / 2;
         while (Abstand > 0)
         {
@@ -407,9 +428,9 @@ public class WorldGeneration : MonoBehaviour
                     if (map[x, y].getValue() == -100) //unbearbeitet
                     {
                         map[x, y] = diamond_berechne_neuen_punkt(
-                            map[x - Abstand, y + Abstand], 
-                            map[x + Abstand, y + Abstand], 
-                            map[x - Abstand, y - Abstand], 
+                            map[x - Abstand, y + Abstand],
+                            map[x + Abstand, y + Abstand],
+                            map[x - Abstand, y - Abstand],
                             map[x + Abstand, y - Abstand]);
 
                         if (debugCheck)
@@ -431,37 +452,37 @@ public class WorldGeneration : MonoBehaviour
                         if (x == 0) //ganz links
                         {
                             map[x, y].setValue(squareCalculation(
-                                map[x, y + Abstand], 
-                                map[x + Abstand, y], 
+                                map[x, y + Abstand],
+                                map[x + Abstand, y],
                                 map[x, y - Abstand]));
                         }
                         else if (x == maplength - 1) //ganz rechts
                         {
                             map[x, y].setValue(squareCalculation(
-                                map[x, y + Abstand], 
-                                map[x - Abstand, y], 
+                                map[x, y + Abstand],
+                                map[x - Abstand, y],
                                 map[x, y - Abstand]));
                         }
                         else if (y == 0) //ganz unten
                         {
                             map[x, y].setValue(squareCalculation(
-                                map[x - Abstand, y], 
-                                map[x, y + Abstand], 
+                                map[x - Abstand, y],
+                                map[x, y + Abstand],
                                 map[x + Abstand, y]));
                         }
                         else if (y == maplength - 1) //ganz oben
                         {
                             map[x, y].setValue(squareCalculation(
-                                map[x - Abstand, y], 
-                                map[x, y - Abstand], 
+                                map[x - Abstand, y],
+                                map[x, y - Abstand],
                                 map[x + Abstand, y]));
                         }
                         else //mittig, 4 Werte
                         {
                             map[x, y].setValue(squareCalculation(
-                                map[x, y + Abstand], 
-                                map[x + Abstand, y], 
-                                map[x, y - Abstand], 
+                                map[x, y + Abstand],
+                                map[x + Abstand, y],
+                                map[x, y - Abstand],
                                 map[x - Abstand, y]));
                         }
                     }
@@ -478,7 +499,7 @@ public class WorldGeneration : MonoBehaviour
         }
     }
 
-    private int squareCalculation(PositionPoint p1, PositionPoint p2, PositionPoint p3) 
+    private int squareCalculation(PositionPoint p1, PositionPoint p2, PositionPoint p3)
     {
         int durchschnitt = (p1.getValue() + p2.getValue() + p3.getValue()) / 3;                 //durchschnitt der 3 Punkte
         int offset_val = offset.ElementAt(UnityEngine.Random.Range(0, offset.Count()));        //mit offset versehen, Count gibt anzahl der elemente wieder
@@ -518,7 +539,7 @@ public class WorldGeneration : MonoBehaviour
 
     public bool potenzVon2(int x)
     {
-        return x > 0 && (x & (x-1)) == 0;
+        return x > 0 && (x & (x - 1)) == 0;
     }
 
     public int nextPotenzfor(int x)
@@ -532,8 +553,8 @@ public class WorldGeneration : MonoBehaviour
     {
         int posX;
         int posY;
-        int value;  
-        
+        int value;
+
         public PositionPoint(int x, int y, int v)
         {
             posX = x; posY = y; value = v;
@@ -546,21 +567,21 @@ public class WorldGeneration : MonoBehaviour
 
         public void log()
         {
-            Debug.Log("Position: "+posX+", "+posY+", Wert: "+value);
+            Debug.Log("Position: " + posX + ", " + posY + ", Wert: " + value);
         }
- 
+
     }
 
     private void diamond_first_step()
     {
-        fügePositionPointinMapein(diamond_berechne_neuen_punkt(map[0, 0], map[0, maplength-1], map[maplength - 1, 0], map[maplength - 1, maplength - 1]));
+        fügePositionPointinMapein(diamond_berechne_neuen_punkt(map[0, 0], map[0, maplength - 1], map[maplength - 1, 0], map[maplength - 1, maplength - 1]));
         Debug.Log("nach first STEP");
         LogMap();
     }
 
     private void diamond_point_ausViereck()
     {
-        foreach(List<PositionPoint> viereck in diamond_Vierecke)
+        foreach (List<PositionPoint> viereck in diamond_Vierecke)
         {
             diamond_berechne_neuen_punkt(viereck.ElementAt(0), viereck.ElementAt(1), viereck.ElementAt(2), viereck.ElementAt(3));
         }
@@ -577,9 +598,10 @@ public class WorldGeneration : MonoBehaviour
     //erstellt zu berechnende Vierecke anhand der zuvor berechneten PositionPoints des diamond-Schritts
     private void berechneVierecke()
     {
-        foreach(PositionPoint p in diamond_calculated_positionPoints)
+        foreach (PositionPoint p in diamond_calculated_positionPoints)
         {
-            for(int z=0; z <= 3; z++) {
+            for (int z = 0; z <= 3; z++)
+            {
                 diamond_Vierecke.Add(Vierreck(p, nextPointInMap(z, p)));
             }
             diamond_calculated_positionPoints.Remove(p);
@@ -594,15 +616,15 @@ public class WorldGeneration : MonoBehaviour
     //3 unten rechts
     private PositionPoint nextPointInMap(int x, PositionPoint p)
     {
-        if(x == 2)      //links unten, immer ein schritt runter und nach links
+        if (x == 2)      //links unten, immer ein schritt runter und nach links
         {
-            int i = p.getX()-1;
-            int j = p.getY()-1;
+            int i = p.getX() - 1;
+            int j = p.getY() - 1;
             while (i >= 0 && j >= 0)
             {
-                if (map[i,j].getValue() != -100)
+                if (map[i, j].getValue() != -100)
                 {
-                    return map[i,j];
+                    return map[i, j];
                 }
                 else
                 {
@@ -611,7 +633,7 @@ public class WorldGeneration : MonoBehaviour
                 }
             }
         }
-        else if(x == 1)  //oben rechts
+        else if (x == 1)  //oben rechts
         {
             int i = p.getX() + 1;
             int j = p.getY() + 1;
@@ -632,7 +654,7 @@ public class WorldGeneration : MonoBehaviour
         {
             int i = p.getX() - 1;
             int j = p.getY() + 1;
-            while (i >=0 && j < maplength)
+            while (i >= 0 && j < maplength)
             {
                 if (map[i, j].getValue() != -100)
                 {
@@ -649,7 +671,7 @@ public class WorldGeneration : MonoBehaviour
         {
             int i = p.getX() + 1;
             int j = p.getY() - 1;
-            while (i < maplength && j >= 0 )
+            while (i < maplength && j >= 0)
             {
                 if (map[i, j].getValue() != -100)
                 {
@@ -671,13 +693,13 @@ public class WorldGeneration : MonoBehaviour
         int MinX = Math.Min(p1.getX(), p2.getX());
         int MaxY = Math.Max(p1.getY(), p2.getY());
         int MinY = Math.Min(p1.getY(), p2.getY());
-        List < PositionPoint > vier = new List<PositionPoint>();
+        List<PositionPoint> vier = new List<PositionPoint>();
         PositionPoint LeftTop = map[MinX, MinY];
         PositionPoint RightTop = map[MinX, MaxY];
         PositionPoint LeftDown = map[MaxX, MinY];
-        PositionPoint RightDown = map[MaxX, MaxY]; 
+        PositionPoint RightDown = map[MaxX, MaxY];
 
-        vier.Add(LeftTop); vier.Add(RightTop); vier.Add(LeftDown);  vier.Add(RightDown);
+        vier.Add(LeftTop); vier.Add(RightTop); vier.Add(LeftDown); vier.Add(RightDown);
         return vier;
 
     }
@@ -688,7 +710,7 @@ public class WorldGeneration : MonoBehaviour
         //berechne neue y Position, Differenz der beiden linken y-Koordinaten (oder wahlweise auch der beiden rechten) also Differenz oben und unten
         if (debugCheck) { Debug.Log("berechne PUNKT"); }
         int SumY = leftTop.getY() + leftDown.getY();
-        if(SumY % 2 != 0){ Debug.Log("Diamond Schritt: y Wert nicht durch 2 teilbar"); }
+        if (SumY % 2 != 0) { Debug.Log("Diamond Schritt: y Wert nicht durch 2 teilbar"); }
         int newY = SumY / 2;
 
         //berechne neue x Position, also wie weit link oder rechts der neue Punkt sein soll
