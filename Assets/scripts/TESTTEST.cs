@@ -19,6 +19,9 @@ public class TESTTEST : MonoBehaviour
 
         
         //surface.BuildNavMesh();
+        //Vector3 start = new Vector3 (0, 0.6f, 0);
+        //Vector3 end = new Vector3 (0,0.6f,3);
+        //Debug.Log("Ist Weg erreichbar von " + start.ToString() + " zu " + end.ToString() + "? Antwort: "+ IsPathClear(start, end, collisionMask));
         //Vector3 startPosition = new Vector3(0, 0, 0); //player.transform.position;
         //Debug.Log(IsPositionReachableOnNavMesh(startPosition, new Vector3(1, 1, 2)));
 
@@ -26,6 +29,36 @@ public class TESTTEST : MonoBehaviour
         //surface.BuildNavMesh();
 
         //GenerateNavMeshLinks(startPosition);
+    }
+
+    public bool IsPathClear(Vector3 p1, Vector3 p2, LayerMask collisionMask)
+    {
+        Vector3 startPoint = new Vector3(p1.x, p1.y + 1.1f, p1.z);
+        Vector3 endPoint = new Vector3(p2.x, p2.y + 1.1f, p2.z);
+        // Berechne die Richtung vom Startpunkt zum Endpunkt
+        Vector3 direction = endPoint - startPoint;
+
+        // Berechne die Distanz zwischen den beiden Punkten
+        float distance = direction.magnitude;
+
+        // Führe den Raycast mit der Layer Mask durch
+        RaycastHit hit;
+        for(int height=0; height<=1; height++)
+        {
+            Vector3 startPosition = new Vector3(startPoint.x, startPoint.y + height, startPoint.z); 
+
+            if (Physics.Raycast(startPosition, direction.normalized, out hit, distance, collisionMask))
+            {
+                // Wenn der Raycast auf etwas trifft, bedeutet das, dass der Weg blockiert ist
+                Debug.Log("Weg blockiert von: " + hit.collider.name);
+                return false;
+            }
+        }
+        
+
+        // Wenn der Raycast auf nichts trifft, ist der Weg frei
+        Debug.Log("Weg ist frei.von " + p1.ToString() + " zu " + p2.ToString());
+        return true;
     }
 
 
@@ -178,9 +211,8 @@ public class TESTTEST : MonoBehaviour
     {
         if(!reachablePositions.Contains(end) && IsPositionOnNavMesh(end) && !IsPositionReachableOnNavMesh(start, end))
         {
-            Vector3 startAbove = new Vector3(start.x, start.y+0.6f, start.z);
-            Vector3 endAbove = new Vector3(end.x, end.y + 0.6f, end.z);
-            if (!ObjectBetween2Points(startAbove, endAbove))
+            
+            if (IsPathClear(start, end, collisionMask))
             {
                 return true;
             }
@@ -217,10 +249,32 @@ public class TESTTEST : MonoBehaviour
         return false;
     }
 
+    public bool IsPathClear(Vector3 startPoint, Vector3 endPoint)
+    {
+        // Berechne die Richtung vom Startpunkt zum Endpunkt
+        Vector3 direction = endPoint - startPoint;
+
+        // Berechne die Distanz zwischen den beiden Punkten
+        float distance = direction.magnitude;
+
+        // Führe den Raycast durch
+        RaycastHit hit;
+        if (Physics.Raycast(startPoint, direction.normalized, out hit, distance))
+        {
+            // Wenn der Raycast auf etwas trifft, bedeutet das, dass der Weg blockiert ist
+            Debug.Log("Weg blockiert von: " + hit.collider.name);
+            return false;
+        }
+
+        // Wenn der Raycast auf nichts trifft, ist der Weg frei
+        Debug.Log("Weg ist frei.");
+        return true;
+    }
+
     bool ObjectBetween2Points(Vector3 start, Vector3 end)
     {
         return false;
-        bool hasCollision = CheckForCollisionWithNarrowRaycast(start, end);
+        bool hasCollision = IsPathClear(start, end);
         if (hasCollision)
         {
             Debug.Log("Es gibt eine Kollision auf dem Weg zwischen Position A und Position B.");
