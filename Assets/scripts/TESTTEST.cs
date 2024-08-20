@@ -31,6 +31,10 @@ public class TESTTEST : MonoBehaviour
         //GenerateNavMeshLinks(startPosition);
     }
 
+
+    //überprüft, ob bei der Verbindung zwischen beiden Blöcken ein Block im Weg ist. ein Raycast 1,1 Einheiten weiter oben und 2,1 Einheiten weiter oben verwendet. 
+    //1,1 Einheiten, da ansonsten der Übergang von (0,0,0) zu (1,1,0) als blockiert angesehen wird. Sollte sich 1 Einheit überhalb des Blocks etwas befinden, dann versperrt dies sowieso nicht den Weg, 
+    //da der Spieler einfach draufspringen kann
     public bool IsPathClear(Vector3 p1, Vector3 p2, LayerMask collisionMask)
     {
         Vector3 startPoint = new Vector3(p1.x, p1.y + 1.1f, p1.z);

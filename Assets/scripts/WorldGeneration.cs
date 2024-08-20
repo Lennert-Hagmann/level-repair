@@ -8,6 +8,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.AI;
 using Unity.AI.Navigation;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 public class WorldGeneration : MonoBehaviour
 {
@@ -73,8 +74,29 @@ public class WorldGeneration : MonoBehaviour
         //IsPositionOnNavMesh(startPosition);
 
         NavMeshLinkScript.GetComponent<TESTTEST>().GenerateNavMeshLinks(startPosition);
+        checkGoalReachable(startPosition);
 
         //BEtaGenerateNavMeshLinks(startPosition);
+    }
+
+    void checkGoalReachable(Vector3 start)
+    {
+        NavMeshPath path = new NavMeshPath();
+        if (NavMesh.CalculatePath(start, Last.transform.position, NavMesh.AllAreas, path))
+        {
+            // Überprüft, ob der berechnete Pfad vollständig ist
+            if (path.status == NavMeshPathStatus.PathComplete)
+            {
+                //Ziel ist für Spieler erreichbar
+                Debug.Log("Ziel ist für Spieler erreichbar");
+            }
+            else
+            {
+                //Ziel ist für Spieler NICHT erreichbar
+                Debug.Log("Ziel ist für Spieler NICHT erreichbar");
+                //erweiterter Agent
+            }
+        }
     }
 
 
