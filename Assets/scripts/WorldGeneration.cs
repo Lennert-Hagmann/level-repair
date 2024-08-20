@@ -93,8 +93,10 @@ public class WorldGeneration : MonoBehaviour
             else
             {
                 //Ziel ist für Spieler NICHT erreichbar
+
                 Debug.Log("Ziel ist für Spieler NICHT erreichbar");
                 //erweiterter Agent
+                NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent(start);
             }
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,11 @@ public class TESTTEST : MonoBehaviour
         //GenerateNavMeshLinks(startPosition);
     }
 
+    public void erweiteterAgent(Vector3 startPosition)
+    {
+        List<Vector3> l = durchquereNavMeshGebiet(startPosition);
+        constructNavMeshLinksToReachablePositions(l,true);
+    }
 
     //überprüft, ob bei der Verbindung zwischen beiden Blöcken ein Block im Weg ist. ein Raycast 1,1 Einheiten weiter oben und 2,1 Einheiten weiter oben verwendet. 
     //1,1 Einheiten, da ansonsten der Übergang von (0,0,0) zu (1,1,0) als blockiert angesehen wird. Sollte sich 1 Einheit überhalb des Blocks etwas befinden, dann versperrt dies sowieso nicht den Weg, 
@@ -296,102 +302,246 @@ public class TESTTEST : MonoBehaviour
     // Finde erreichbare Positionen anderer NavMesh Bereiche innerhalb einer Begrenzung
     //for NavMeshLink Konstruktion, beinhaltet alle Positionen, zu denen ein NavMeshLink möglich ist. Also, durch einen Sprung erreichbar
     List<Vector3> reachablePositions = new List<Vector3>();
-    void constructNavMeshLinksToReachablePositions(List<Vector3> positionsInSameNavMesh)
+    void constructNavMeshLinksToReachablePositions(List<Vector3> positionsInSameNavMesh, Boolean erweiterterAgent)
     {
         foreach (Vector3 position in positionsInSameNavMesh)
         {
 
-            //durchlaufe mögliche durch Sprung erreichbare Felder
-            //Spieler kann im Bereich 3x3 alle Felder erreichen, egal ob Höhe 1, 0 oder -1
-            //in einer zentrale Richtung kann er sogar 4 Felder weit springen
-            //höhe
-            for(int height= -1; height<=1; height++) 
+            Boolean erweitert = erweiterterAgent;
+            //falls in der 2. Iteration nichts passiert, sollte eine 3. Iteration durchgeführt werden, also mit 2 zwischenpositionen
+            if (erweitert)
             {
-                CreateNavMeshLink(position, new Vector3(position.x - 4, position.y + height, position.z));
-                CreateNavMeshLink(position, new Vector3(position.x + 4, position.y + height, position.z));
-                CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z + 4));
-                CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z - 4));
-                for (int x= -3; x<=3; x++)
-                {
-                    for(int z= -3; z<=3; z++)
-                    {
-                        if((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                        {
-                            //do nothing
-                        }
-                        else
-                        {
-                            CreateNavMeshLink(position, new Vector3(position.x + x, position.y + height, position.z + z));
-                        }
-                    }
-                }
-            }
-
-
-            /*
-            Debug.Log("Durchlauf mit Position: " + position.ToString()); //DEBUG
-            for (int distance = 2; distance <= 4; distance++)
-            {
+                Vector3 zwischenposition = new Vector3(0,0,0);
                 for (int height = -1; height <= 1; height++)
                 {
-                    Vector3 p1 = new Vector3(position.x + distance, position.y + height, position.z);
-                    Vector3 p2 = new Vector3(position.x - distance, position.y + height, position.z);
-                    Vector3 p3 = new Vector3(position.x, position.y + height, position.z + distance);
-                    Vector3 p4 = new Vector3(position.x, position.y + height, position.z - distance);
-                    CreateNavMeshLink(position, p1);
-                    CreateNavMeshLink(position, p2);
-                    CreateNavMeshLink(position, p3);
-                    CreateNavMeshLink(position, p4);
+                    zwischenposition = new Vector3(position.x - 4, position.y + height, position.z);
+                    for (int height2 = -1; height2 <= 1; height2++)
+                    {
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
+                        for (int x = -3; x <= 3; x++)
+                        {
+                            for (int z = -3; z <= 3; z++)
+                            {
+                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                                {
+                                    //do nothing
+                                }
+                                else
+                                {
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
+                                }
+                            }
+                        }
+                    }
+                    zwischenposition = new Vector3(position.x + 4, position.y + height, position.z);
+                    for (int height2 = -1; height2 <= 1; height2++)
+                    {
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
+                        for (int x = -3; x <= 3; x++)
+                        {
+                            for (int z = -3; z <= 3; z++)
+                            {
+                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                                {
+                                    //do nothing
+                                }
+                                else
+                                {
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
+                                }
+                            }
+                        }
+                    }
+                    zwischenposition = new Vector3(position.x , position.y + height, position.z + 4);
+                    for (int height2 = -1; height2 <= 1; height2++)
+                    {
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
+                        for (int x = -3; x <= 3; x++)
+                        {
+                            for (int z = -3; z <= 3; z++)
+                            {
+                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                                {
+                                    //do nothing
+                                }
+                                else
+                                {
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
+                                }
+                            }
+                        }
+                    }
+                    zwischenposition = new Vector3(position.x , position.y + height, position.z - 4);
+                    for (int height2 = -1; height2 <= 1; height2++)
+                    {
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
+                        for (int x = -3; x <= 3; x++)
+                        {
+                            for (int z = -3; z <= 3; z++)
+                            {
+                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                                {
+                                    //do nothing
+                                }
+                                else
+                                {
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
+                                }
+                            }
+                        }
+                    }
+                    for (int x = -3; x <= 3; x++)
+                    {
+                        for (int z = -3; z <= 3; z++)
+                        {
+                            if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                            {
+                                //do nothing
+                            }
+                            else
+                            {
+                                zwischenposition = new Vector3(position.x + x, position.y + height, position.z + z);
+                                for (int height3 = -1; height3 <= 1; height3++)
+                                {
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height3, zwischenposition.z), zwischenposition);
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height3, zwischenposition.z), zwischenposition);
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height3, zwischenposition.z + 4), zwischenposition);
+                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height3, zwischenposition.z - 4), zwischenposition);
+                                    for (int x1 = -3; x <= 3; x++)
+                                    {
+                                        for (int z1 = -3; z <= 3; z++)
+                                        {
+                                            if ((((x1 == -1 && z1 == 0) || (x1 == 0 && z1 == -1) || (x1 == 0 && z1 == 0) || (x1 == 0 && z1 == 1) || (x1 == 1 && z1 == 0)) && height == 0) || (x1 == 0 && z1 == 0 && height == 0))
+                                            {
+                                                //do nothing
+                                            }
+                                            else
+                                            {
+                                                ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x1, zwischenposition.y + height3, zwischenposition.z + z1), zwischenposition);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-                    if (distance == 1) //durchlaufe diagonal
+
+
+
+
+                }
+
+            }
+            else
+            {
+                //durchlaufe mögliche durch Sprung erreichbare Felder
+                //Spieler kann im Bereich 3x3 alle Felder erreichen, egal ob Höhe 1, 0 oder -1
+                //in einer zentrale Richtung kann er sogar 4 Felder weit springen
+                //höhe
+                for (int height = -1; height <= 1; height++)
+                {
+                    CreateNavMeshLink(position, new Vector3(position.x - 4, position.y + height, position.z));
+                    CreateNavMeshLink(position, new Vector3(position.x + 4, position.y + height, position.z));
+                    CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z + 4));
+                    CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z - 4));
+                    for (int x = -3; x <= 3; x++)
                     {
-                        Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
-                        Vector3 p6 = new Vector3(position.x + distance, position.y + height, position.z + distance);
-                        CreateNavMeshLink(position, p5);
-                        CreateNavMeshLink(position, p6);
-                    }
-                    else if (distance == 2)
-                    {
-                        Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
-                        Vector3 p6 = new Vector3(position.x - 1, position.y + height, position.z - distance);
-                        Vector3 p7 = new Vector3(position.x - distance, position.y + height, position.z - 1);
-                        Vector3 p8 = new Vector3(position.x + distance, position.y + height, position.z + distance);
-                        Vector3 p9 = new Vector3(position.x + 1, position.y + height, position.z + distance);
-                        Vector3 p10 = new Vector3(position.x + distance, position.y + height, position.z + 1);
-                        CreateNavMeshLink(position, p5);
-                        CreateNavMeshLink(position, p6);
-                        CreateNavMeshLink(position, p7);
-                        CreateNavMeshLink(position, p8);
-                        CreateNavMeshLink(position, p9);
-                        CreateNavMeshLink(position, p10);
-                    }
-                    else if (distance == 3)
-                    {
-                        Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
-                        Vector3 p6 = new Vector3(position.x - 1, position.y + height, position.z - distance);
-                        Vector3 p7 = new Vector3(position.x - 2, position.y + height, position.z - distance);
-                        Vector3 p8 = new Vector3(position.x - distance, position.y + height, position.z - 1);
-                        Vector3 p9 = new Vector3(position.x - distance, position.y + height, position.z - 2);
-                        Vector3 p10 = new Vector3(position.x + distance, position.y + height, position.z + distance);
-                        Vector3 p11 = new Vector3(position.x + 1, position.y + height, position.z + distance);
-                        Vector3 p12 = new Vector3(position.x + 2, position.y + height, position.z + distance);
-                        Vector3 p13 = new Vector3(position.x + distance, position.y + height, position.z + 1);
-                        Vector3 p14 = new Vector3(position.x + distance, position.y + height, position.z + 2);
-                        CreateNavMeshLink(position, p5);
-                        CreateNavMeshLink(position, p6);
-                        CreateNavMeshLink(position, p7);
-                        CreateNavMeshLink(position, p8);
-                        CreateNavMeshLink(position, p9);
-                        CreateNavMeshLink(position, p10);
-                        CreateNavMeshLink(position, p11);
-                        CreateNavMeshLink(position, p12);
-                        CreateNavMeshLink(position, p13);
-                        CreateNavMeshLink(position, p14);
+                        for (int z = -3; z <= 3; z++)
+                        {
+                            if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                            {
+                                //do nothing
+                            }
+                            else
+                            {
+                                CreateNavMeshLink(position, new Vector3(position.x + x, position.y + height, position.z + z));
+                            }
+                        }
                     }
                 }
+
+
+                /*
+                Debug.Log("Durchlauf mit Position: " + position.ToString()); //DEBUG
+                for (int distance = 2; distance <= 4; distance++)
+                {
+                    for (int height = -1; height <= 1; height++)
+                    {
+                        Vector3 p1 = new Vector3(position.x + distance, position.y + height, position.z);
+                        Vector3 p2 = new Vector3(position.x - distance, position.y + height, position.z);
+                        Vector3 p3 = new Vector3(position.x, position.y + height, position.z + distance);
+                        Vector3 p4 = new Vector3(position.x, position.y + height, position.z - distance);
+                        CreateNavMeshLink(position, p1);
+                        CreateNavMeshLink(position, p2);
+                        CreateNavMeshLink(position, p3);
+                        CreateNavMeshLink(position, p4);
+
+                        if (distance == 1) //durchlaufe diagonal
+                        {
+                            Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
+                            Vector3 p6 = new Vector3(position.x + distance, position.y + height, position.z + distance);
+                            CreateNavMeshLink(position, p5);
+                            CreateNavMeshLink(position, p6);
+                        }
+                        else if (distance == 2)
+                        {
+                            Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
+                            Vector3 p6 = new Vector3(position.x - 1, position.y + height, position.z - distance);
+                            Vector3 p7 = new Vector3(position.x - distance, position.y + height, position.z - 1);
+                            Vector3 p8 = new Vector3(position.x + distance, position.y + height, position.z + distance);
+                            Vector3 p9 = new Vector3(position.x + 1, position.y + height, position.z + distance);
+                            Vector3 p10 = new Vector3(position.x + distance, position.y + height, position.z + 1);
+                            CreateNavMeshLink(position, p5);
+                            CreateNavMeshLink(position, p6);
+                            CreateNavMeshLink(position, p7);
+                            CreateNavMeshLink(position, p8);
+                            CreateNavMeshLink(position, p9);
+                            CreateNavMeshLink(position, p10);
+                        }
+                        else if (distance == 3)
+                        {
+                            Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
+                            Vector3 p6 = new Vector3(position.x - 1, position.y + height, position.z - distance);
+                            Vector3 p7 = new Vector3(position.x - 2, position.y + height, position.z - distance);
+                            Vector3 p8 = new Vector3(position.x - distance, position.y + height, position.z - 1);
+                            Vector3 p9 = new Vector3(position.x - distance, position.y + height, position.z - 2);
+                            Vector3 p10 = new Vector3(position.x + distance, position.y + height, position.z + distance);
+                            Vector3 p11 = new Vector3(position.x + 1, position.y + height, position.z + distance);
+                            Vector3 p12 = new Vector3(position.x + 2, position.y + height, position.z + distance);
+                            Vector3 p13 = new Vector3(position.x + distance, position.y + height, position.z + 1);
+                            Vector3 p14 = new Vector3(position.x + distance, position.y + height, position.z + 2);
+                            CreateNavMeshLink(position, p5);
+                            CreateNavMeshLink(position, p6);
+                            CreateNavMeshLink(position, p7);
+                            CreateNavMeshLink(position, p8);
+                            CreateNavMeshLink(position, p9);
+                            CreateNavMeshLink(position, p10);
+                            CreateNavMeshLink(position, p11);
+                            CreateNavMeshLink(position, p12);
+                            CreateNavMeshLink(position, p13);
+                            CreateNavMeshLink(position, p14);
+                        }
+                    }
+                }
+                */
+                DebugShow(reachablePositions);
+
+
+
             }
-            */
-            DebugShow(reachablePositions);
         }
     }
 
@@ -400,7 +550,7 @@ public class TESTTEST : MonoBehaviour
     {
         
         List<Vector3> l = durchquereNavMeshGebiet(startPosition);
-        constructNavMeshLinksToReachablePositions(l);
+        constructNavMeshLinksToReachablePositions(l, false);
 
 
 
@@ -452,6 +602,38 @@ public class TESTTEST : MonoBehaviour
 
     void CreateNavMeshLink(Vector3 start, Vector3 end)
     {
+        if (isNavMeshLinkPossible(start, end))
+        {
+            reachablePositions.Add(end);
+            Debug.Log("link");
+            // Erstelle ein neues GameObject für den NavMeshLink
+            GameObject linkObject = new GameObject("NavMeshLink");
+            var navMeshLink = linkObject.AddComponent<NavMeshLink>();
+
+            // Setze die Start- und Endpunkte des Links
+            navMeshLink.startPoint = start;
+            navMeshLink.endPoint = end;
+
+            // Optional: Weitere Einstellungen
+            navMeshLink.width = 1.0f;
+            navMeshLink.costModifier = -1;
+            navMeshLink.bidirectional = true;
+
+            // Aktualisiere den Link
+            navMeshLink.UpdateLink();
+            positionsToCheck.Enqueue(end);
+            Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
+            GenerateNavMeshLinks(end);
+        }
+
+    }
+
+    void ErweitertCreateNavMeshLink(Vector3 start, Vector3 end, Vector3 zwischenposition)
+    {
+
+        //Wenn Link möglich
+        //Mach Zwischenposition erreichbar (entweder durch Hinzufügen eines Blocks oder durch Hinwegnahme anderer Blöcke), färbe diesen Pink
+        //Link von start zu zwischen und von zwischen zu end
         if (isNavMeshLinkPossible(start, end))
         {
             reachablePositions.Add(end);
