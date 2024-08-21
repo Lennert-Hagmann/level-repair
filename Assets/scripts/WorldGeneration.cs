@@ -16,6 +16,7 @@ public class WorldGeneration : MonoBehaviour
     public Transform spawnPosition;
     public GameObject tile;
     public GameObject end_tile;
+    public GameObject destroyed_tile;
 
     //navmesh
     public NavMeshSurface surface;
@@ -59,24 +60,38 @@ public class WorldGeneration : MonoBehaviour
     }
 
     public GameObject NavMeshLinkScript;
+    public GameObject new_tile;
 
     private void Start()
     {
+
+        NavMeshLinkScript.GetComponent<TESTTEST>().newTile = new_tile;
         diamond_square(33, 0, 10, 0, 1);
         createTiles();
+
+        //NavMeshLinkScript.GetComponent<TESTTEST>().deleteObjectsBetween(new Vector3 (4,0,0), new Vector3(4, 0, 10));
 
         //diamond_step(testmap, new PositionPoint(0, 0, 0), new PositionPoint(0, 2, 2), new PositionPoint(2, 0, 3), new PositionPoint(2, 2, 5),  testoffset, testvalues);
 
         surface.BuildNavMesh();
         Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
         Debug.LogWarning(startPosition);
-
+        NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
+        NavMeshLinkScript.GetComponent<TESTTEST>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
-        NavMeshLinkScript.GetComponent<TESTTEST>().GenerateNavMeshLinks(startPosition);
+        NavMeshLinkScript.GetComponent<TESTTEST>().destroyedTile = destroyed_tile;
+        NavMeshLinkScript.GetComponent<TESTTEST>().Agent(startPosition);
 
-        NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-        checkGoalReachable(startPosition);
+        if(NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable == false)
+        {
+
+            NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
+            NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
+            NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent(startPosition);
+        }
+        //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
+        //checkGoalReachable(startPosition);
 
         //BEtaGenerateNavMeshLinks(startPosition);
     }
@@ -182,7 +197,7 @@ public class WorldGeneration : MonoBehaviour
         if (NavMesh.SamplePosition(position, out hit, 1.0f, NavMesh.AllAreas))
         {
             // Wenn ein Punkt gefunden wurde, liegt die Position innerhalb der NavMeshSurface
-            Debug.Log("NAVMESH");
+            //Debug.Log("NAVMESH");
             return true;
         }
         return false;

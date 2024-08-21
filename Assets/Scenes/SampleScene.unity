@@ -844,10 +844,12 @@ MonoBehaviour:
   spawnPosition: {fileID: 594702075}
   tile: {fileID: 91341454588760603, guid: b15f826d412ebca4d94d7ad5d5cb2e22, type: 3}
   end_tile: {fileID: 91341454588760603, guid: 3c7a89e36cb54d545ae41e5effbea22b, type: 3}
+  destroyed_tile: {fileID: 91341454588760603, guid: bfe1a88f739745743ab283072b5b76c5, type: 3}
   surface: {fileID: 1262786669}
   debugCheck: 0
   player: {fileID: 2086308168}
   NavMeshLinkScript: {fileID: 1543195248}
+  new_tile: {fileID: 91341454588760603, guid: 23e70c7bec66e9e4d957d2f1740c523f, type: 3}
   maxVerticalDistance: 1
   maxHorizontalDistance: 3
   edgeDetectionRadius: 0.5
@@ -1060,16 +1062,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   surface: {fileID: 1262786669}
   player: {fileID: 2086308168}
+  PlayerStartPosition: {x: 0, y: 0, z: 0}
+  GoalTile: {fileID: 0}
   AllTiles: []
-  maxVerticalDistance: 1
-  maxHorizontalDistance: 3
   edgeDetectionRadius: 0.2
   ColorChange: 1
+  ColorChangeFarbe: {r: 0, g: 0, b: 0, a: 0}
+  markOnlyNewPositions: 0
+  ColorChangedPositions: []
+  GoalReachable: 0
   collisionMask:
     serializedVersion: 2
-    m_Bits: 0
-  height: 2
-  rayCount: 5
+    m_Bits: 4294967295
+  tile: {fileID: 0}
+  newTile: {fileID: 0}
+  destroyedTile: {fileID: 0}
 --- !u!4 &1543195250
 Transform:
   m_ObjectHideFlags: 0

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using TMPro;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -15,10 +16,14 @@ public class TESTTEST : MonoBehaviour
 
     public NavMeshSurface surface;
     public GameObject player;
+    public Vector3 PlayerStartPosition;
+    public GameObject GoalTile;
     private void Start()
     {
 
-        
+        //Debug.Log(isAObjectinMap(new Vector3(1, 0, 2)));
+        //RemoveObjectsAbove(new Vector3(2,2, 1));
+        //deleteObjectsBetween(new Vector3(0,0,0), new Vector3(2,1,3));
         //surface.BuildNavMesh();
         //Vector3 start = new Vector3 (0, 0.6f, 0);
         //Vector3 end = new Vector3 (0,0.6f,3);
@@ -37,8 +42,17 @@ public class TESTTEST : MonoBehaviour
     public void erweiteterAgent(Vector3 startPosition)
     {
         Debug.LogWarning("ERWEITERTER AGENT");
-        List<Vector3> l = durchquereNavMeshGebiet(startPosition);
-        constructNavMeshLinksToReachablePositions(l,true);
+        List<Vector3> l = new List<Vector3>();
+        if (!GoalReachable)
+        {
+
+            l = durchquereNavMeshGebiet(startPosition);
+        }
+        if(!GoalReachable)
+        {
+            constructNavMeshLinksToReachablePositions(l, true);
+
+        }
     }
 
     //überprüft, ob bei der Verbindung zwischen beiden Blöcken ein Block im Weg ist. ein Raycast 1,1 Einheiten weiter oben und 2,1 Einheiten weiter oben verwendet. 
@@ -71,7 +85,7 @@ public class TESTTEST : MonoBehaviour
         
 
         // Wenn der Raycast auf nichts trifft, ist der Weg frei
-        Debug.Log("Weg ist frei.von " + p1.ToString() + " zu " + p2.ToString());
+        //Debug.Log("Weg ist frei.von " + p1.ToString() + " zu " + p2.ToString());
         return true;
     }
 
@@ -154,12 +168,12 @@ public class TESTTEST : MonoBehaviour
                     //wenn Position begehbar ist
                     if (IsPositionOnNavMesh(possiblePosition))
                     {
-                        Debug.Log(possiblePosition.ToString() + " ist auf einer NavMesh");
+                        //Debug.Log(possiblePosition.ToString() + " ist auf einer NavMesh");
 
                         // Prüfe, ob die Position auf dem gleichen NavMeshSurface liegt
                         if (IsPositionOnSameMesh(possiblePosition, startPosition))
                         {
-                            Debug.Log(possiblePosition.ToString() + " ist auf GLEICHER NavMesh");
+                            //Debug.Log(possiblePosition.ToString() + " ist auf GLEICHER NavMesh");
                             sameMeshPositions.Add(possiblePosition);
                             positionsToCheck.Enqueue(possiblePosition);
                         }
@@ -178,7 +192,27 @@ public class TESTTEST : MonoBehaviour
         {
             changeColor(sameMeshPositions);
         }
+        checkIfGoalIsReachable();
         return sameMeshPositions;
+    }
+
+    void checkIfGoalIsReachable()
+    {
+        NavMeshPath path = new NavMeshPath();
+        if (NavMesh.CalculatePath(PlayerStartPosition, GoalTile.transform.position, NavMesh.AllAreas, path))
+        {
+            // Überprüft, ob der berechnete Pfad vollständig ist
+            if (path.status == NavMeshPathStatus.PathComplete)
+            {
+                //Ziel ist für Spieler erreichbar
+                Debug.Log("Ziel ist für Spieler erreichbar");
+                GoalReachable = true;
+            }
+            else
+            {
+                
+            }
+        }
     }
 
 
@@ -187,6 +221,9 @@ public class TESTTEST : MonoBehaviour
     public Color ColorChangeFarbe;
     public bool markOnlyNewPositions;
     public List<Vector3> ColorChangedPositions;
+
+
+    public bool GoalReachable = false;
 
 
     //färbt alle Position in der Liste mit der übergebenen Farbe
@@ -280,93 +317,14 @@ public class TESTTEST : MonoBehaviour
                 for (int height = -1; height <= 1; height++)
                 {
                     zwischenposition = new Vector3(position.x - 4, position.y + height, position.z);
-                    for (int height2 = -1; height2 <= 1; height2++)
-                    {
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
-                        for (int x = -3; x <= 3; x++)
-                        {
-                            for (int z = -3; z <= 3; z++)
-                            {
-                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                                {
-                                    //do nothing
-                                }
-                                else
-                                {
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
-                                }
-                            }
-                        }
-                    }
+                    untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
                     zwischenposition = new Vector3(position.x + 4, position.y + height, position.z);
-                    for (int height2 = -1; height2 <= 1; height2++)
-                    {
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
-                        for (int x = -3; x <= 3; x++)
-                        {
-                            for (int z = -3; z <= 3; z++)
-                            {
-                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                                {
-                                    //do nothing
-                                }
-                                else
-                                {
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
-                                }
-                            }
-                        }
-                    }
+                    untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
                     zwischenposition = new Vector3(position.x , position.y + height, position.z + 4);
-                    for (int height2 = -1; height2 <= 1; height2++)
-                    {
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
-                        for (int x = -3; x <= 3; x++)
-                        {
-                            for (int z = -3; z <= 3; z++)
-                            {
-                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                                {
-                                    //do nothing
-                                }
-                                else
-                                {
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
-                                }
-                            }
-                        }
-                    }
+                    untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
                     zwischenposition = new Vector3(position.x , position.y + height, position.z - 4);
-                    for (int height2 = -1; height2 <= 1; height2++)
-                    {
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height2, zwischenposition.z), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z + 4), zwischenposition);
-                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height2, zwischenposition.z - 4), zwischenposition);
-                        for (int x = -3; x <= 3; x++)
-                        {
-                            for (int z = -3; z <= 3; z++)
-                            {
-                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                                {
-                                    //do nothing
-                                }
-                                else
-                                {
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height2, zwischenposition.z + z), zwischenposition);
-                                }
-                            }
-                        }
-                    }
+                    untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
+                    /*
                     for (int x = -3; x <= 3; x++)
                     {
                         for (int z = -3; z <= 3; z++)
@@ -378,30 +336,11 @@ public class TESTTEST : MonoBehaviour
                             else
                             {
                                 zwischenposition = new Vector3(position.x + x, position.y + height, position.z + z);
-                                for (int height3 = -1; height3 <= 1; height3++)
-                                {
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height3, zwischenposition.z), zwischenposition);
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height3, zwischenposition.z), zwischenposition);
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height3, zwischenposition.z + 4), zwischenposition);
-                                    ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height3, zwischenposition.z - 4), zwischenposition);
-                                    for (int x1 = -3; x <= 3; x++)
-                                    {
-                                        for (int z1 = -3; z <= 3; z++)
-                                        {
-                                            if ((((x1 == -1 && z1 == 0) || (x1 == 0 && z1 == -1) || (x1 == 0 && z1 == 0) || (x1 == 0 && z1 == 1) || (x1 == 1 && z1 == 0)) && height == 0) || (x1 == 0 && z1 == 0 && height == 0))
-                                            {
-                                                //do nothing
-                                            }
-                                            else
-                                            {
-                                                ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x1, zwischenposition.y + height3, zwischenposition.z + z1), zwischenposition);
-                                            }
-                                        }
-                                    }
-                                }
+                                untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
                             }
                         }
                     }
+                    */
 
 
 
@@ -446,12 +385,43 @@ public class TESTTEST : MonoBehaviour
         }
     }
 
-
-    public void GenerateNavMeshLinks(Vector3 startPosition)
+    void untersucheFelderDurchErweitertenSprungErreichbar(Vector3 position, Vector3 zwischenposition)
     {
+        for (int height = -1; height <= 1; height++)
+        {
+            ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x - 4, zwischenposition.y + height, zwischenposition.z), zwischenposition);
+            ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + 4, zwischenposition.y + height, zwischenposition.z), zwischenposition);
+            ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height, zwischenposition.z + 4), zwischenposition);
+            ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x, zwischenposition.y + height, zwischenposition.z - 4), zwischenposition);
+            for (int x = -3; x <= 3; x++)
+            {
+                for (int z = -3; z <= 3; z++)
+                {
+                    if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                    {
+                        //do nothing
+                    }
+                    else
+                    {
+                        ErweitertCreateNavMeshLink(position, new Vector3(zwischenposition.x + x, zwischenposition.y + height, zwischenposition.z + z), zwischenposition);
+                    }
+                }
+            }
+        }
+    }
 
-        List<Vector3> l = durchquereNavMeshGebiet(startPosition);
-        constructNavMeshLinksToReachablePositions(l, false);
+
+    public void Agent(Vector3 startPosition)
+    {
+        List<Vector3> l = new List<Vector3>();
+        if (!GoalReachable)
+        {
+            l = durchquereNavMeshGebiet(startPosition);
+        }
+        if(!GoalReachable) 
+        { 
+            constructNavMeshLinksToReachablePositions(l, false); 
+        }
 
 
 
@@ -475,7 +445,7 @@ public class TESTTEST : MonoBehaviour
         if (NavMesh.SamplePosition(PositionAbove, out hit, 0.2f, NavMesh.AllAreas))
         {
             // Wenn ein Punkt gefunden wurde, liegt die Position innerhalb der NavMeshSurface
-            Debug.Log("NAVMESH");
+            //Debug.Log("NAVMESH");
             return true;
         }
         return false;
@@ -499,7 +469,7 @@ public class TESTTEST : MonoBehaviour
     {
         if (isNavMeshLinkPossible(start, end))
         {
-            Debug.Log("link");
+            //Debug.Log("link");
             // Erstelle ein neues GameObject für den NavMeshLink
             GameObject linkObject = new GameObject("NavMeshLink");
             var navMeshLink = linkObject.AddComponent<NavMeshLink>();
@@ -516,40 +486,182 @@ public class TESTTEST : MonoBehaviour
             // Aktualisiere den Link
             navMeshLink.UpdateLink();
             positionsToCheck.Enqueue(end);
-            Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
-            GenerateNavMeshLinks(end);
+            //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
+            Agent(end);
         }
 
     }
 
+    bool erweitertenLinkGesetzt = false;
+    public GameObject tile;
+
     void ErweitertCreateNavMeshLink(Vector3 start, Vector3 end, Vector3 zwischenposition)
     {
-
-        //Wenn Link möglich
-        //Mach Zwischenposition erreichbar (entweder durch Hinzufügen eines Blocks oder durch Hinwegnahme anderer Blöcke), färbe diesen Pink
-        //Link von start zu zwischen und von zwischen zu end
-        if (isNavMeshLinkPossible(start, end))
+        if (!erweitertenLinkGesetzt)
         {
-            Debug.Log("link");
-            // Erstelle ein neues GameObject für den NavMeshLink
-            GameObject linkObject = new GameObject("NavMeshLink");
-            var navMeshLink = linkObject.AddComponent<NavMeshLink>();
+            //Link möglich
+            if (IsPositionOnNavMesh(end) && !IsPositionReachableOnNavMesh(start, end))
+            {
+                // Erstelle ein neues GameObject für den NavMeshLink
+                GameObject linkObject = new GameObject("NavMeshLink");
+                var navMeshLink = linkObject.AddComponent<NavMeshLink>();
 
-            // Setze die Start- und Endpunkte des Links
-            navMeshLink.startPoint = start;
-            navMeshLink.endPoint = end;
+                // Setze die Start- und Endpunkte des Links
+                navMeshLink.startPoint = start;
+                navMeshLink.endPoint = zwischenposition;
 
-            // Optional: Weitere Einstellungen
-            navMeshLink.width = 1.0f;
-            navMeshLink.costModifier = -1;
-            navMeshLink.bidirectional = true;
+                // Optional: Weitere Einstellungen
+                navMeshLink.width = 1.0f;
+                navMeshLink.costModifier = -1;
+                navMeshLink.bidirectional = true;
 
-            // Aktualisiere den Link
-            navMeshLink.UpdateLink();
-            positionsToCheck.Enqueue(end);
-            Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
-            GenerateNavMeshLinks(end);
+                // Aktualisiere den Link
+                navMeshLink.UpdateLink();
+                positionsToCheck.Enqueue(end);
+
+                // Erstelle ein neues GameObject für den NavMeshLink
+                GameObject linkObject2 = new GameObject("NavMeshLink");
+                var navMeshLink2 = linkObject2.AddComponent<NavMeshLink>();
+
+                // Setze die Start- und Endpunkte des Links
+                navMeshLink2.startPoint = zwischenposition;
+                navMeshLink2.endPoint = end;
+
+                // Optional: Weitere Einstellungen
+                navMeshLink2.width = 1.0f;
+                navMeshLink2.costModifier = -1;
+                navMeshLink2.bidirectional = true;
+
+                // Aktualisiere den Link
+                navMeshLink2.UpdateLink();
+                positionsToCheck.Enqueue(end);
+                erweitertenLinkGesetzt = true;
+                check(zwischenposition, start, end);
+                Agent(end);
+            }
+        }
+    }
+
+    public GameObject newTile;
+
+    //überprüft, ob ein Block erstellt oder entfernt werden muss
+    void check(Vector3 zwischenpos, Vector3 startpos, Vector3 endpos)
+    {
+        if (isAObjectinMap(zwischenpos))
+        {
+            deleteObjectsBetween(startpos, zwischenpos);
+            RemoveObjectsAbove(zwischenpos);
+            deleteObjectsBetween(zwischenpos, endpos);
+            //entferne die Blöcke oberhalb und alle, die in der NavLink Linie liegen
+        }
+        else
+        {
+            //zerstöre alle Objekte, die in der NavLink Linie liegen
+            deleteObjectsBetween(startpos, zwischenpos);
+            Instantiate(newTile, zwischenpos, Quaternion.identity);
+            //unterhalb auch noch mit Objekten füllen
+            deleteObjectsBetween(zwischenpos, endpos);
+        }
+    }
+
+    void RemoveObjectsAbove(Vector3 position)
+    {
+        RaycastHit hit;
+
+        // Führe einen vertikalen Raycast nach oben durch
+        while (Physics.Raycast(position, Vector3.up, out hit, Mathf.Infinity))
+        {
+            Debug.Log("Entferne Objekt oberhalb der Position: " + hit.collider.name);
+
+            // Entferne das getroffene Objekt
+            Destroy(hit.collider.gameObject);
+
+            // Aktualisiere die Position, um direkt hinter dem entfernten Objekt zu starten
+            position = hit.point + Vector3.up * 0.01f; // Ein kleiner Abstand, um sicherzustellen, dass du nicht immer das gleiche Objekt triffst
         }
 
+        Debug.Log("Alle Objekte oberhalb der Position wurden entfernt.");
+    }
+
+
+    public GameObject destroyedTile;
+
+    public void deleteObjectsBetween(Vector3 startpos, Vector3 endpos)
+    {
+
+        
+        
+
+        bool blockiert = true;
+        for (int height = 0; height <= 2; height++)
+        {
+            //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
+            Vector3 start = new Vector3(startpos.x, startpos.y + 1.1f + height, startpos.z);
+            Vector3 end = new Vector3(endpos.x, endpos.y + 1.1f + height, endpos.z);
+
+            // Berechne die Richtung vom Startpunkt zum Endpunkt
+            Vector3 direction = end - start;
+
+            // Berechne die Distanz zwischen den beiden Punkten
+            float distance = direction.magnitude;
+            // Führe den Raycast mit der Layer Mask durch
+            RaycastHit hit;
+            while (blockiert)
+            {
+                Debug.Log("TT");
+                if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
+                {
+                    Debug.Log("Weg blockiert von: " + hit.collider.name);
+                    Destroy(hit.collider.gameObject);
+                    Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                    start = hit.point + direction.normalized * 0.01f;
+                    Instantiate(destroyedTile, hit.collider.gameObject.transform.position, Quaternion.identity);
+                }
+                else
+                {
+                    blockiert = false;
+                }
+            }
+            blockiert = true;
+        }
+    }
+
+    bool isThereAObject(Vector3 pos)
+    {
+        //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
+        Vector3 pos2 = new Vector3(pos.x, pos.y + 0.2f, pos.z);
+        // Berechne die Richtung vom Startpunkt zum Endpunkt
+        Vector3 direction = pos2 - pos;
+
+        // Berechne die Distanz zwischen den beiden Punkten
+        float distance = direction.magnitude;
+
+        // Führe den Raycast mit der Layer Mask durch
+        RaycastHit hit;
+        if (Physics.Raycast(pos, direction.normalized, out hit, distance, collisionMask))
+        {
+                // Wenn der Raycast auf etwas trifft, bedeutet das, dass der Weg blockiert ist
+                Debug.Log("Weg blockiert von: " + hit.collider.name);
+                return true;
+        }
+        return false;
+    }
+
+    bool isAObjectinMap(Vector3 pos)
+    {
+        Vector3 boxSize = new Vector3(0.9f, 0.9f, 0.9f);
+        Collider[] hitColliders = Physics.OverlapBox(pos, boxSize / 2);
+
+        if (hitColliders.Length > 0)
+        {
+
+            Debug.Log("Ein Block ist an der Position.");
+            return true;
+        }
+        else
+        {
+            Debug.Log("Kein Block an der Position.");
+            return false;
+        }
     }
 }
