@@ -32,8 +32,11 @@ public class TESTTEST : MonoBehaviour
         //GenerateNavMeshLinks(startPosition);
     }
 
+
+    //In Bearbeitung
     public void erweiteterAgent(Vector3 startPosition)
     {
+        Debug.LogWarning("ERWEITERTER AGENT");
         List<Vector3> l = durchquereNavMeshGebiet(startPosition);
         constructNavMeshLinksToReachablePositions(l,true);
     }
@@ -43,6 +46,7 @@ public class TESTTEST : MonoBehaviour
     //da der Spieler einfach draufspringen kann
     public bool IsPathClear(Vector3 p1, Vector3 p2, LayerMask collisionMask)
     {
+        //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
         Vector3 startPoint = new Vector3(p1.x, p1.y + 1.1f, p1.z);
         Vector3 endPoint = new Vector3(p2.x, p2.y + 1.1f, p2.z);
         // Berechne die Richtung vom Startpunkt zum Endpunkt
@@ -71,10 +75,12 @@ public class TESTTEST : MonoBehaviour
         return true;
     }
 
-
+    //Liste zum Speichern aller von WorldGeneration erstellten Tiles,
+    //Diese Liste wird dazu genutzt, später die Objekte zu suchen, dessen Farbe geändert werden soll.
+    //Dazu muss auf die bereits erstellten Objekte zugegriffen werden. Deshalb werden diese in dieser Liste gespeichert.
     public List<GameObject> AllTiles;
 
-    //TT
+    //überprüft, ob die Target Position von der Start Position aus erreichbar ist (Test über Navmesh)
     bool IsPositionReachableOnNavMesh(Vector3 start, Vector3 target)
     {
         NavMeshPath path = new NavMeshPath();
@@ -85,32 +91,35 @@ public class TESTTEST : MonoBehaviour
             // Überprüft, ob der berechnete Pfad vollständig ist
             if (path.status == NavMeshPathStatus.PathComplete)
             {
-                return true;  // Position A ist erreichbar
+                return true;  // Position target ist erreichbar
             }
         }
 
-        return false;  // Position A ist nicht erreichbar
+        return false;  // Position target ist nicht erreichbar
     }
 
 
-
-    public float maxVerticalDistance = 1.0f;
-    public float maxHorizontalDistance = 3.0f;
+    //wird dazu genutzt, um zu checken, ob Ojekte auf einem gleichen NavMesh Bereich liegen
+    //In Methode IsPositionOnSameMesh
     public float edgeDetectionRadius = 0.2f;
 
 
-    //bekommt eine Startposition und gibt ein Array zurück, welches alle Positionen enthält, welche in demselben NavMesh-Bereich liegen wie die Startposition. Also alle Bereiche, die durch NavMesh von der Startposition aus erreichbar sind
+    
     // Warteschlange für Positionen, die untersucht werden müssen
     Queue<Vector3> positionsToCheck = new Queue<Vector3>();
+
+    //bekommt eine Startposition und gibt ein Array zurück, welches alle Positionen enthält, 
+    //welche in demselben NavMesh-Bereich liegen wie die Startposition. 
+    //Also alle Bereiche, die durch NavMesh von der Startposition aus erreichbar sind
     List<Vector3> durchquereNavMeshGebiet(Vector3 startPosition)
     {
+        //In dieser Liste werden alle Positionen gespeichert, die auf einem NavMesh Bereich liegen
         List<Vector3> sameMeshPositions = new List<Vector3>();
 
-        
         positionsToCheck.Enqueue(startPosition);
         sameMeshPositions.Add(startPosition);
 
-
+        //alle Positionen werden hier gespeichert, die überprüft wurden und außerhalb des NavMesh Bereichs liegen
         List<Vector3> checkedPositions = new List<Vector3>();
 
         while (positionsToCheck.Count > 0)
@@ -139,15 +148,17 @@ public class TESTTEST : MonoBehaviour
 
             foreach (Vector3 possiblePosition in possiblePositions)
             {
+                //wenn Position noch nicht überprüft (sonst entweder außerhalb oder in der gleichen NavMesh)
                 if (!checkedPositions.Contains(possiblePosition) && !sameMeshPositions.Contains(possiblePosition))
                 {
+                    //wenn Position begehbar ist
                     if (IsPositionOnNavMesh(possiblePosition))
                     {
                         Debug.Log(possiblePosition.ToString() + " ist auf einer NavMesh");
+
                         // Prüfe, ob die Position auf dem gleichen NavMeshSurface liegt
                         if (IsPositionOnSameMesh(possiblePosition, startPosition))
                         {
-
                             Debug.Log(possiblePosition.ToString() + " ist auf GLEICHER NavMesh");
                             sameMeshPositions.Add(possiblePosition);
                             positionsToCheck.Enqueue(possiblePosition);
@@ -155,51 +166,66 @@ public class TESTTEST : MonoBehaviour
                         else
                         {
                             checkedPositions.Add(possiblePosition);
-                            // Finde erreichbare Positionen in einem anderen NavMesh-Bereich
-                            //if (IsPositionReachable(currentPosition, possiblePosition))
-                            //{
-                            // Erstelle einen NavMeshLink zwischen den beiden Bereichen
-                            //CreateNavMeshLink(currentPosition, possiblePosition);
-                            //}
                         }
                     }
                 }
 
 
             }
-            //
         }
+        //färbe bei Bedarf die Objekte, die auf demselben NavMesh Bereich liegen
         if (ColorChange)
         {
-            changeColorToBlue(sameMeshPositions);
+            changeColor(sameMeshPositions);
         }
         return sameMeshPositions;
     }
 
-    public bool ColorChange;
 
-    void changeColorToBlue(List<Vector3> positions)
+
+    public bool ColorChange;
+    public Color ColorChangeFarbe;
+    public bool markOnlyNewPositions;
+    public List<Vector3> ColorChangedPositions;
+
+
+    //färbt alle Position in der Liste mit der übergebenen Farbe
+    void changeColor(List<Vector3> positions)
     {
         foreach (Vector3 position in positions)
         {
-            GameObject tile = returnObjectAtPosition(position);
-            Transform childTransform = tile.transform.GetChild(0);
-            GameObject childGameObject = childTransform.gameObject;
-            Renderer ren = childGameObject.GetComponent<Renderer>();
-            // Zugriff auf den Renderer des Objekts
-            if (ren != null)
+            if (markOnlyNewPositions && ColorChangedPositions.Contains(position))
             {
-                // Ändern der Farbe des Materials
-                ren.material.SetColor("_Color", Color.blue);
-                //Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
+                //nothing
             }
             else
             {
-                Debug.LogWarning("Kein Renderer gefunden! Dieses Objekt kann keine Farbe ändern.");
+                GameObject tile = returnObjectAtPosition(position);
+                Transform childTransform = tile.transform.GetChild(0);
+                GameObject childGameObject = childTransform.gameObject;
+                Renderer ren = childGameObject.GetComponent<Renderer>();
+                // Zugriff auf den Renderer des Objekts
+                if (ren != null)
+                {
+                    // Ändern der Farbe des Materials
+                    ren.material.SetColor("_Color", ColorChangeFarbe);
+                    if (markOnlyNewPositions)
+                    {
+                        ColorChangedPositions.Add(position);
+                    }
+                    //Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
+                }
+                else
+                {
+                    Debug.LogWarning("Kein Renderer gefunden! Dieses Objekt kann keine Farbe ändern.");
+                }
             }
+
         }
     }
 
+
+    //Hilfsmethode für changeColor, gibt das Objekt an der übergebenen Position zurück
     GameObject returnObjectAtPosition(Vector3 position)
     {
         foreach (GameObject obj in AllTiles)
@@ -212,14 +238,18 @@ public class TESTTEST : MonoBehaviour
             }
         }
         Debug.LogWarning("FEHLER bei Objekt Suche mit Objekt: " + position);
-
         return null;
     }
 
 
+
+    //testet, ob ein NavMesh Link zwischen den Positionen möglich ist.
+    //Dazu darf die Zielposition nicht bereits erreichbar sein, aber muss auf einer NavMesh liegen 
+    //und der Weg zwischen beiden Positionen muss frei sein
     bool isNavMeshLinkPossible(Vector3 start, Vector3 end)
     {
-        if(!reachablePositions.Contains(end) && IsPositionOnNavMesh(end) && !IsPositionReachableOnNavMesh(start, end))
+        //if(!reachablePositions.Contains(end) && IsPositionOnNavMesh(end) && !IsPositionReachableOnNavMesh(start, end))
+        if(IsPositionOnNavMesh(end) && !IsPositionReachableOnNavMesh(start, end))
         {
             
             if (IsPathClear(start, end, collisionMask))
@@ -231,77 +261,12 @@ public class TESTTEST : MonoBehaviour
     }
 
     public LayerMask collisionMask;  // Layer, die als Hindernisse zählen
-    public float height = 2f;  // Höhe, die abgedeckt werden soll
-    public int rayCount = 5;   // Anzahl der Raycasts in der Höhe
 
 
-
-    bool CheckForCollisionWithNarrowRaycast(Vector3 start, Vector3 end)
-    {
-        Vector3 direction = end - start;
-        float distance = direction.magnitude;
-        direction.Normalize();
-
-        // Führe mehrere schmale Raycasts entlang der vertikalen Linie durch
-        for (int i = 0; i < rayCount; i++)
-        {
-            float currentHeight = i * (height / (rayCount - 1));
-            Vector3 rayStart = start + Vector3.up * currentHeight;
-
-            // Ein schmaler Raycast wird an der aktuellen Höhe ausgeführt
-            if (Physics.Raycast(rayStart, direction, out RaycastHit hit, distance, collisionMask))
-            {
-                Debug.Log("Kollision auf Höhe " + currentHeight + " mit " + hit.collider.name);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public bool IsPathClear(Vector3 startPoint, Vector3 endPoint)
-    {
-        // Berechne die Richtung vom Startpunkt zum Endpunkt
-        Vector3 direction = endPoint - startPoint;
-
-        // Berechne die Distanz zwischen den beiden Punkten
-        float distance = direction.magnitude;
-
-        // Führe den Raycast durch
-        RaycastHit hit;
-        if (Physics.Raycast(startPoint, direction.normalized, out hit, distance))
-        {
-            // Wenn der Raycast auf etwas trifft, bedeutet das, dass der Weg blockiert ist
-            Debug.Log("Weg blockiert von: " + hit.collider.name);
-            return false;
-        }
-
-        // Wenn der Raycast auf nichts trifft, ist der Weg frei
-        Debug.Log("Weg ist frei.");
-        return true;
-    }
-
-    bool ObjectBetween2Points(Vector3 start, Vector3 end)
-    {
-        return false;
-        bool hasCollision = IsPathClear(start, end);
-        if (hasCollision)
-        {
-            Debug.Log("Es gibt eine Kollision auf dem Weg zwischen Position A und Position B.");
-            return true;
-        }
-        else
-        {
-            Debug.Log("Kein Hindernis auf dem Weg zwischen Position A und Position B.");
-            return false;
-        }
-    }
 
 
     //erreiche alle durch Sprung erreichbaren Positionen, die auf einer anderen NavMesh liegen
-    // Finde erreichbare Positionen anderer NavMesh Bereiche innerhalb einer Begrenzung
-    //for NavMeshLink Konstruktion, beinhaltet alle Positionen, zu denen ein NavMeshLink möglich ist. Also, durch einen Sprung erreichbar
-    List<Vector3> reachablePositions = new List<Vector3>();
+    //dazu wird eine Liste übergeben, die alle Positionen innerhalb einer NavMesh Umgebung enthält. Der Umgebung, die aktuell untersucht wird
     void constructNavMeshLinksToReachablePositions(List<Vector3> positionsInSameNavMesh, Boolean erweiterterAgent)
     {
         foreach (Vector3 position in positionsInSameNavMesh)
@@ -447,100 +412,36 @@ public class TESTTEST : MonoBehaviour
             }
             else
             {
-                //durchlaufe mögliche durch Sprung erreichbare Felder
-                //Spieler kann im Bereich 3x3 alle Felder erreichen, egal ob Höhe 1, 0 oder -1
-                //in einer zentrale Richtung kann er sogar 4 Felder weit springen
-                //höhe
-                for (int height = -1; height <= 1; height++)
+                untersucheFelderDurchSprungErreichbar(position);
+            }
+        }
+    }
+
+    //durchlaufe mögliche durch Sprung erreichbare Felder
+    //Spieler kann im Bereich 3x3 alle Felder erreichen, egal ob Höhe 1, 0 oder -1
+    //in einer zentrale Richtung kann er sogar 4 Felder weit springen
+    //höhe
+    void untersucheFelderDurchSprungErreichbar(Vector3 position)
+    {
+        for (int height = -1; height <= 1; height++)
+        {
+            CreateNavMeshLink(position, new Vector3(position.x - 4, position.y + height, position.z));
+            CreateNavMeshLink(position, new Vector3(position.x + 4, position.y + height, position.z));
+            CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z + 4));
+            CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z - 4));
+            for (int x = -3; x <= 3; x++)
+            {
+                for (int z = -3; z <= 3; z++)
                 {
-                    CreateNavMeshLink(position, new Vector3(position.x - 4, position.y + height, position.z));
-                    CreateNavMeshLink(position, new Vector3(position.x + 4, position.y + height, position.z));
-                    CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z + 4));
-                    CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z - 4));
-                    for (int x = -3; x <= 3; x++)
+                    if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
                     {
-                        for (int z = -3; z <= 3; z++)
-                        {
-                            if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                            {
-                                //do nothing
-                            }
-                            else
-                            {
-                                CreateNavMeshLink(position, new Vector3(position.x + x, position.y + height, position.z + z));
-                            }
-                        }
+                        //do nothing
+                    }
+                    else
+                    {
+                        CreateNavMeshLink(position, new Vector3(position.x + x, position.y + height, position.z + z));
                     }
                 }
-
-
-                /*
-                Debug.Log("Durchlauf mit Position: " + position.ToString()); //DEBUG
-                for (int distance = 2; distance <= 4; distance++)
-                {
-                    for (int height = -1; height <= 1; height++)
-                    {
-                        Vector3 p1 = new Vector3(position.x + distance, position.y + height, position.z);
-                        Vector3 p2 = new Vector3(position.x - distance, position.y + height, position.z);
-                        Vector3 p3 = new Vector3(position.x, position.y + height, position.z + distance);
-                        Vector3 p4 = new Vector3(position.x, position.y + height, position.z - distance);
-                        CreateNavMeshLink(position, p1);
-                        CreateNavMeshLink(position, p2);
-                        CreateNavMeshLink(position, p3);
-                        CreateNavMeshLink(position, p4);
-
-                        if (distance == 1) //durchlaufe diagonal
-                        {
-                            Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
-                            Vector3 p6 = new Vector3(position.x + distance, position.y + height, position.z + distance);
-                            CreateNavMeshLink(position, p5);
-                            CreateNavMeshLink(position, p6);
-                        }
-                        else if (distance == 2)
-                        {
-                            Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
-                            Vector3 p6 = new Vector3(position.x - 1, position.y + height, position.z - distance);
-                            Vector3 p7 = new Vector3(position.x - distance, position.y + height, position.z - 1);
-                            Vector3 p8 = new Vector3(position.x + distance, position.y + height, position.z + distance);
-                            Vector3 p9 = new Vector3(position.x + 1, position.y + height, position.z + distance);
-                            Vector3 p10 = new Vector3(position.x + distance, position.y + height, position.z + 1);
-                            CreateNavMeshLink(position, p5);
-                            CreateNavMeshLink(position, p6);
-                            CreateNavMeshLink(position, p7);
-                            CreateNavMeshLink(position, p8);
-                            CreateNavMeshLink(position, p9);
-                            CreateNavMeshLink(position, p10);
-                        }
-                        else if (distance == 3)
-                        {
-                            Vector3 p5 = new Vector3(position.x - distance, position.y + height, position.z - distance);
-                            Vector3 p6 = new Vector3(position.x - 1, position.y + height, position.z - distance);
-                            Vector3 p7 = new Vector3(position.x - 2, position.y + height, position.z - distance);
-                            Vector3 p8 = new Vector3(position.x - distance, position.y + height, position.z - 1);
-                            Vector3 p9 = new Vector3(position.x - distance, position.y + height, position.z - 2);
-                            Vector3 p10 = new Vector3(position.x + distance, position.y + height, position.z + distance);
-                            Vector3 p11 = new Vector3(position.x + 1, position.y + height, position.z + distance);
-                            Vector3 p12 = new Vector3(position.x + 2, position.y + height, position.z + distance);
-                            Vector3 p13 = new Vector3(position.x + distance, position.y + height, position.z + 1);
-                            Vector3 p14 = new Vector3(position.x + distance, position.y + height, position.z + 2);
-                            CreateNavMeshLink(position, p5);
-                            CreateNavMeshLink(position, p6);
-                            CreateNavMeshLink(position, p7);
-                            CreateNavMeshLink(position, p8);
-                            CreateNavMeshLink(position, p9);
-                            CreateNavMeshLink(position, p10);
-                            CreateNavMeshLink(position, p11);
-                            CreateNavMeshLink(position, p12);
-                            CreateNavMeshLink(position, p13);
-                            CreateNavMeshLink(position, p14);
-                        }
-                    }
-                }
-                */
-                DebugShow(reachablePositions);
-
-
-
             }
         }
     }
@@ -548,7 +449,7 @@ public class TESTTEST : MonoBehaviour
 
     public void GenerateNavMeshLinks(Vector3 startPosition)
     {
-        
+
         List<Vector3> l = durchquereNavMeshGebiet(startPosition);
         constructNavMeshLinksToReachablePositions(l, false);
 
@@ -592,19 +493,12 @@ public class TESTTEST : MonoBehaviour
         return hit.mask == referenceHit.mask;
     }
 
-    bool IsPositionReachable(Vector3 from, Vector3 to)
-    {
-        float verticalDistance = Mathf.Abs(to.y - from.y);
-        float horizontalDistance = Vector3.Distance(new Vector3(to.x, 0, to.z), new Vector3(from.x, 0, from.z));
-        Debug.Log("VERTIKALE DISTANZ: " + verticalDistance + " ,   HORIZONTALE DISTANZ: " + horizontalDistance);
-        return verticalDistance <= maxVerticalDistance && horizontalDistance <= maxHorizontalDistance && horizontalDistance > 0;
-    }
+    
 
     void CreateNavMeshLink(Vector3 start, Vector3 end)
     {
         if (isNavMeshLinkPossible(start, end))
         {
-            reachablePositions.Add(end);
             Debug.Log("link");
             // Erstelle ein neues GameObject für den NavMeshLink
             GameObject linkObject = new GameObject("NavMeshLink");
@@ -636,7 +530,6 @@ public class TESTTEST : MonoBehaviour
         //Link von start zu zwischen und von zwischen zu end
         if (isNavMeshLinkPossible(start, end))
         {
-            reachablePositions.Add(end);
             Debug.Log("link");
             // Erstelle ein neues GameObject für den NavMeshLink
             GameObject linkObject = new GameObject("NavMeshLink");

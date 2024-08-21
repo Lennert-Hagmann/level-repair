@@ -72,8 +72,10 @@ public class WorldGeneration : MonoBehaviour
         Debug.LogWarning(startPosition);
 
         //IsPositionOnNavMesh(startPosition);
-
+        NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
         NavMeshLinkScript.GetComponent<TESTTEST>().GenerateNavMeshLinks(startPosition);
+
+        NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
         checkGoalReachable(startPosition);
 
         //BEtaGenerateNavMeshLinks(startPosition);
