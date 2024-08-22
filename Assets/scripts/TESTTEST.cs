@@ -43,16 +43,33 @@ public class TESTTEST : MonoBehaviour
     {
         Debug.LogWarning("ERWEITERTER AGENT");
         List<Vector3> l = new List<Vector3>();
-        if (!GoalReachable)
-        {
+        pos = startPosition;
 
-            l = durchquereNavMeshGebiet(startPosition);
-        }
-        if(!GoalReachable)
-        {
-            constructNavMeshLinksToReachablePositions(l, true);
+            if (!GoalReachable)
+            {
 
-        }
+                l = durchquereNavMeshGebiet(pos);
+            }
+            if (!GoalReachable)
+            {
+                constructNavMeshLinksToReachablePositions(l, true);
+
+            }
+            if (erweitertenLinkGesetzt)
+            {
+                erweitertenLinkGesetzt = false;
+                l = durchquereNavMeshGebiet(pos);
+                if (!GoalReachable)
+                {
+                    constructNavMeshLinksToReachablePositions(l, false);
+
+                }
+            }
+            else
+            {
+                //dritte Iteration
+            }
+        
     }
 
     //überprüft, ob bei der Verbindung zwischen beiden Blöcken ein Block im Weg ist. ein Raycast 1,1 Einheiten weiter oben und 2,1 Einheiten weiter oben verwendet. 
@@ -205,7 +222,7 @@ public class TESTTEST : MonoBehaviour
             if (path.status == NavMeshPathStatus.PathComplete)
             {
                 //Ziel ist für Spieler erreichbar
-                Debug.Log("Ziel ist für Spieler erreichbar");
+                Debug.LogWarning("Ziel ist für Spieler erreichbar");
                 GoalReachable = true;
             }
             else
@@ -537,12 +554,20 @@ public class TESTTEST : MonoBehaviour
                 positionsToCheck.Enqueue(end);
                 erweitertenLinkGesetzt = true;
                 check(zwischenposition, start, end);
-                Agent(end);
+                pos = end;
+                surface.BuildNavMesh();
+                List<Vector3> l2 = durchquereNavMeshGebiet(end);
+                if (!GoalReachable)
+                {
+                    constructNavMeshLinksToReachablePositions(l2, true);
+
+                }
             }
         }
     }
 
     public GameObject newTile;
+    public Vector3 pos;
 
     //überprüft, ob ein Block erstellt oder entfernt werden muss
     void check(Vector3 zwischenpos, Vector3 startpos, Vector3 endpos)
@@ -591,7 +616,7 @@ public class TESTTEST : MonoBehaviour
 
         
         
-
+        List<Vector3> positions = new List<Vector3>();
         bool blockiert = true;
         for (int height = 0; height <= 2; height++)
         {
@@ -606,6 +631,7 @@ public class TESTTEST : MonoBehaviour
             float distance = direction.magnitude;
             // Führe den Raycast mit der Layer Mask durch
             RaycastHit hit;
+
             while (blockiert)
             {
                 Debug.Log("TT");
@@ -615,7 +641,7 @@ public class TESTTEST : MonoBehaviour
                     Destroy(hit.collider.gameObject);
                     Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
                     start = hit.point + direction.normalized * 0.01f;
-                    Instantiate(destroyedTile, hit.collider.gameObject.transform.position, Quaternion.identity);
+                    positions.Add(hit.collider.gameObject.transform.position);
                 }
                 else
                 {
@@ -623,6 +649,10 @@ public class TESTTEST : MonoBehaviour
                 }
             }
             blockiert = true;
+        }
+        foreach(Vector3 pos in positions)
+        {
+            Instantiate(destroyedTile, pos, Quaternion.identity);
         }
     }
 

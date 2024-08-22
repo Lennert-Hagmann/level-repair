@@ -61,6 +61,7 @@ public class WorldGeneration : MonoBehaviour
 
     public GameObject NavMeshLinkScript;
     public GameObject new_tile;
+    public bool erweitert;
 
     private void Start()
     {
@@ -83,17 +84,16 @@ public class WorldGeneration : MonoBehaviour
         NavMeshLinkScript.GetComponent<TESTTEST>().destroyedTile = destroyed_tile;
         NavMeshLinkScript.GetComponent<TESTTEST>().Agent(startPosition);
 
-        if(NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable == false)
+
+        
+        if(NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable == false && erweitert)
         {
 
             NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
             NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
             NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent(startPosition);
         }
-        //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-        //checkGoalReachable(startPosition);
 
-        //BEtaGenerateNavMeshLinks(startPosition);
     }
 
     void checkGoalReachable(Vector3 start)
