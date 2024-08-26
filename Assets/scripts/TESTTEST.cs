@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using TMPro;
 using Unity.AI.Navigation;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
@@ -38,38 +39,259 @@ public class TESTTEST : MonoBehaviour
     }
 
 
-    //In Bearbeitung
-    public void erweiteterAgent(Vector3 startPosition)
+
+    bool IstImSpielBereich(Vector3 p)
     {
-        Debug.LogWarning("ERWEITERTER AGENT");
-        List<Vector3> l = new List<Vector3>();
-        pos = startPosition;
+        return (0 <= p.x && p.x <= 32  && 0 <= p.z && p.z <= 32);
+    }
+    //In Bearbeitung
 
-            if (!GoalReachable)
-            {
+    public List<Vector3> reachablePositions; 
 
-                l = durchquereNavMeshGebiet(pos);
-            }
-            if (!GoalReachable)
-            {
-                constructNavMeshLinksToReachablePositions(l, true);
 
-            }
-            if (erweitertenLinkGesetzt)
+    //speichert die zwischenpos beim erweiterten Sprung
+    public Vector3 zwischenpos;
+    //gibt die erste Position zurück, die durch einen Doppelsprung erreicht werden kann
+    Vector3 erweiteterSprung(Vector3 p)
+    {
+        Debug.Log("erweiteter Sprung mit Startposition "+ p.ToString());    
+        Vector3 finalPosition = new Vector3(100, 100, 100); 
+        Vector3 Test = new Vector3(100, 100, 100);
+        for (int height = -1; height <= 1; height++)
+        {
+            for (int x = 3; x >= -3; x--)
             {
-                erweitertenLinkGesetzt = false;
-                l = durchquereNavMeshGebiet(pos);
-                if (!GoalReachable)
+                for (int z = 3; z >= -3; z--)
                 {
-                    constructNavMeshLinksToReachablePositions(l, false);
+                    if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                    {
+                        //do nothing
+                    }
+                    else
+                    {
+                        zwischenpos = new Vector3(p.x + x, p.y + height, p.z + z);
+                        if (IstImSpielBereich(zwischenpos))
+                        {
+                            finalPosition = erweiteterSprung2(zwischenpos, p);
+                            if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                            {
+                                return finalPosition;
+                            }
+                        }
+                        
 
+                    }
                 }
             }
-            else
+            zwischenpos = new Vector3(p.x - 4, p.y + height, p.z);
+            if (IstImSpielBereich(zwischenpos))
             {
-                //dritte Iteration
+                finalPosition = erweiteterSprung2(zwischenpos, p);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
             }
+            zwischenpos = new Vector3(p.x + 4, p.y + height, p.z);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung2(zwischenpos, p);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+            zwischenpos = new Vector3(p.x, p.y + height, p.z + 4);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung2(zwischenpos, p);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+            zwischenpos = new Vector3(p.x, p.y + height, p.z - 4);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung2(zwischenpos, p);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+        }
+        Debug.LogWarning("kein erweiterter Sprung gefunden");
+        return Test;
+    }
+    Vector3 erweiteterSprung2(Vector3 zwischenpos, Vector3 startPos)
+    {
+        Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString());
+        Vector3 endPos;
+        for (int height = -1; height <= 1; height++)
+        {
+            for (int x = 3; x >= -3; x--)
+            {
+                for (int z = 3; z >= -3; z--)
+                {
+                    if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                    {
+                        //do nothing
+                    }
+                    else
+                    {
+                        endPos = new Vector3(zwischenpos.x + x, zwischenpos.y + height, zwischenpos.z + z);
+                        if(IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                        {
+                            return endPos;
+                        }
+                    }
+                }
+            }
+            endPos = new Vector3(zwischenpos.x - 4, zwischenpos.y + height, zwischenpos.z);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+            {
+                return endPos;
+            }
+            endPos = new Vector3(zwischenpos.x + 4, zwischenpos.y + height, zwischenpos.z);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+            {
+                return endPos;
+            }
+            endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z + 4);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+            {
+                return endPos;
+            }
+            endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z - 4);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+            {
+                return endPos;
+            }
+        }
+        return new Vector3(100, 100, 100);
+    }
+
+    public void erweiteterAgent()
+    {
+        Debug.LogWarning("ERWEITERTER AGENT");
+        reachablePositions.Add(PlayerStartPosition);
+        Vector3 closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions); //NavMeshs, die nur 1 Position enthalten werden nicht berücksichtigt
+        Debug.Log("Nächste Position: " + closestPos.ToString());
+
+
+        //Debug.Log("Positionen in VavMesh Gebiet:");
+        List<Vector3> NavMesh = FindNavMeshFromPos(closestPos);     //Fehler bei closestPos = (0,0,0)
+        //foreach(Vector3 pos in NavMesh)
+        //{
+        //    Debug.Log(pos.ToString());
+        //}
+        bool gefunden = false;
+        List<Vector3> newPosDurchErweitertenSprung = new List<Vector3>();
+        if (!GoalReachable)
+        {
+            //constructNavMeshLinksToReachablePositions(NavMesh, true);
+            List<Vector3> sortedNavMesh = NavMesh
+            .OrderByDescending(v => v.x)  // Sortiere nach der X-Koordinate absteigend
+            .ThenByDescending(v => v.z)   // Sortiere nach der Z-Koordinate absteigend
+            .ToList();
+            foreach (Vector3 position in sortedNavMesh)
+            {
+                if (gefunden == false)
+                {
+                    Vector3 SprungPos = erweiteterSprung(position);
+                    if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
+                    {
+                        Debug.Log("Neue Position gefunden " + SprungPos.ToString() +" über Zwischenposition: " + zwischenpos.ToString());
+                        gefunden = true;
+                        ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
+                        newPosDurchErweitertenSprung.Add(SprungPos);
+                    }
+                }
+
+            }
+
+        }
+        List<Vector3> newPositions = new List<Vector3>();
+        foreach (Vector3 pos in newPosDurchErweitertenSprung)
+        {
+            Debug.Log("Untersuche " + pos.ToString());
+            List<Vector3> list = durchquereNavMeshGebiet(pos);
+            if (!GoalReachable)
+            {
+                foreach (Vector3 position in list)
+                {
+                    for (int height = -1; height <= 1; height++)
+                    {
+                        CreateNavMeshLink2(position, new Vector3(position.x - 4, position.y + height, position.z), newPositions);
+                        CreateNavMeshLink2(position, new Vector3(position.x + 4, position.y + height, position.z), newPositions);
+                        CreateNavMeshLink2(position, new Vector3(position.x, position.y + height, position.z + 4), newPositions);
+                        CreateNavMeshLink2(position, new Vector3(position.x, position.y + height, position.z - 4), newPositions);
+                        for (int x = -3; x <= 3; x++)
+                        {
+                            for (int z = -3; z <= 3; z++)
+                            {
+                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                                {
+                                    //do nothing
+                                }
+                                else
+                                {
+                                    CreateNavMeshLink2(position, new Vector3(position.x + x, position.y + height, position.z + z), newPositions);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!GoalReachable)
+            {
+                foreach (Vector3 p in newPositions)
+                {
+                    durchquereNavMeshGebiet(p);
+                }
+            }
+        }
+        if (!GoalReachable)
+        {
+            surface.BuildNavMesh();
+            erweiteterAgent();
+        }  
         
+    }
+
+    List<Vector3> FindNavMeshFromPos(Vector3 pos)
+    {
+        foreach(List<Vector3> NavMesh in ListOfNavMeshs) 
+        {
+            if(NavMesh.Contains(pos)) { return NavMesh; }
+        }
+        Debug.LogWarning("Fehler bei FindNavMeshFromPos");
+        return null;
+    }
+
+    public Vector3 FindClosestPosition(Vector3 targetPosition, List<Vector3> positions)
+    {
+        // Initialisiere die Variablen für die nächste Position und den kleinsten Abstand
+        Vector3 closestPosition = Vector3.zero;
+        float smallestDistance = Mathf.Infinity;
+
+        // Durchlaufe jede Position in der Liste
+        foreach (Vector3 position in positions)
+        {
+            // Berechne den Abstand zwischen der aktuellen Position und der Zielposition
+            float distance = Vector3.Distance(targetPosition, position);
+
+            // Wenn dieser Abstand kleiner ist als der bisher kleinste Abstand,
+            // speichere diese Position und den neuen kleinsten Abstand
+            if (distance < smallestDistance)
+            {
+                smallestDistance = distance;
+                closestPosition = position;
+            }
+        }
+
+        // Gib die nächste Position zurück
+        return closestPosition;
     }
 
     //überprüft, ob bei der Verbindung zwischen beiden Blöcken ein Block im Weg ist. ein Raycast 1,1 Einheiten weiter oben und 2,1 Einheiten weiter oben verwendet. 
@@ -134,6 +356,7 @@ public class TESTTEST : MonoBehaviour
     //In Methode IsPositionOnSameMesh
     public float edgeDetectionRadius = 0.2f;
 
+    List<List<Vector3>> ListOfNavMeshs = new List<List<Vector3>>();
 
     
     // Warteschlange für Positionen, die untersucht werden müssen
@@ -180,7 +403,7 @@ public class TESTTEST : MonoBehaviour
             foreach (Vector3 possiblePosition in possiblePositions)
             {
                 //wenn Position noch nicht überprüft (sonst entweder außerhalb oder in der gleichen NavMesh)
-                if (!checkedPositions.Contains(possiblePosition) && !sameMeshPositions.Contains(possiblePosition))
+                if (!checkedPositions.Contains(possiblePosition) && !sameMeshPositions.Contains(possiblePosition)&&!reachablePositions.Contains(possiblePosition))
                 {
                     //wenn Position begehbar ist
                     if (IsPositionOnNavMesh(possiblePosition))
@@ -192,6 +415,7 @@ public class TESTTEST : MonoBehaviour
                         {
                             //Debug.Log(possiblePosition.ToString() + " ist auf GLEICHER NavMesh");
                             sameMeshPositions.Add(possiblePosition);
+                            reachablePositions.Add(possiblePosition);
                             positionsToCheck.Enqueue(possiblePosition);
                         }
                         else
@@ -209,14 +433,15 @@ public class TESTTEST : MonoBehaviour
         {
             changeColor(sameMeshPositions);
         }
-        checkIfGoalIsReachable();
+        checkIfGoalIsReachable(startPosition);
+        ListOfNavMeshs.Add(sameMeshPositions);
         return sameMeshPositions;
     }
 
-    void checkIfGoalIsReachable()
+    void checkIfGoalIsReachable(Vector3 pos)
     {
         NavMeshPath path = new NavMeshPath();
-        if (NavMesh.CalculatePath(PlayerStartPosition, GoalTile.transform.position, NavMesh.AllAreas, path))
+        if (NavMesh.CalculatePath(pos, GoalTile.transform.position, NavMesh.AllAreas, path))
         {
             // Überprüft, ob der berechnete Pfad vollständig ist
             if (path.status == NavMeshPathStatus.PathComplete)
@@ -224,6 +449,7 @@ public class TESTTEST : MonoBehaviour
                 //Ziel ist für Spieler erreichbar
                 Debug.LogWarning("Ziel ist für Spieler erreichbar");
                 GoalReachable = true;
+
             }
             else
             {
@@ -255,24 +481,32 @@ public class TESTTEST : MonoBehaviour
             else
             {
                 GameObject tile = returnObjectAtPosition(position);
-                Transform childTransform = tile.transform.GetChild(0);
-                GameObject childGameObject = childTransform.gameObject;
-                Renderer ren = childGameObject.GetComponent<Renderer>();
-                // Zugriff auf den Renderer des Objekts
-                if (ren != null)
+                if(tile.transform.GetChild(0) != null)
                 {
-                    // Ändern der Farbe des Materials
-                    ren.material.SetColor("_Color", ColorChangeFarbe);
-                    if (markOnlyNewPositions)
+                    Transform childTransform = tile.transform.GetChild(0);
+                    GameObject childGameObject = childTransform.gameObject;
+                    Renderer ren = childGameObject.GetComponent<Renderer>();
+                    // Zugriff auf den Renderer des Objekts
+                    if (ren != null)
                     {
-                        ColorChangedPositions.Add(position);
+                        // Ändern der Farbe des Materials
+                        ren.material.SetColor("_Color", ColorChangeFarbe);
+                        if (markOnlyNewPositions)
+                        {
+                            ColorChangedPositions.Add(position);
+                        }
+                        //Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
                     }
-                    //Debug.Log("BLAU GEFÄRBT an Positon: " + tile.transform.position);
+                    else
+                    {
+                        Debug.LogWarning("Kein Renderer gefunden! Dieses Objekt kann keine Farbe ändern.");
+                    }
                 }
                 else
                 {
-                    Debug.LogWarning("Kein Renderer gefunden! Dieses Objekt kann keine Farbe ändern.");
+                    Debug.LogWarning(tile.transform.position.ToString() +" konnte nicht gefunden werden! (ist null)");
                 }
+                
             }
 
         }
@@ -341,27 +575,6 @@ public class TESTTEST : MonoBehaviour
                     untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
                     zwischenposition = new Vector3(position.x , position.y + height, position.z - 4);
                     untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
-                    /*
-                    for (int x = -3; x <= 3; x++)
-                    {
-                        for (int z = -3; z <= 3; z++)
-                        {
-                            if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                            {
-                                //do nothing
-                            }
-                            else
-                            {
-                                zwischenposition = new Vector3(position.x + x, position.y + height, position.z + z);
-                                untersucheFelderDurchErweitertenSprungErreichbar(position, zwischenposition);
-                            }
-                        }
-                    }
-                    */
-
-
-
-
 
                 }
 
@@ -428,9 +641,9 @@ public class TESTTEST : MonoBehaviour
     }
 
 
+    List<Vector3> l = new List<Vector3>();
     public void Agent(Vector3 startPosition)
     {
-        List<Vector3> l = new List<Vector3>();
         if (!GoalReachable)
         {
             l = durchquereNavMeshGebiet(startPosition);
@@ -504,11 +717,83 @@ public class TESTTEST : MonoBehaviour
             navMeshLink.UpdateLink();
             positionsToCheck.Enqueue(end);
             //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
+
+
             Agent(end);
         }
 
     }
 
+    void CreateNavMeshLink2(Vector3 start, Vector3 end, List<Vector3> list)
+    {
+        if (isNavMeshLinkPossible(start, end))
+        {
+            //Debug.Log("link");
+            // Erstelle ein neues GameObject für den NavMeshLink
+            GameObject linkObject = new GameObject("NavMeshLink");
+            var navMeshLink = linkObject.AddComponent<NavMeshLink>();
+
+            // Setze die Start- und Endpunkte des Links
+            navMeshLink.startPoint = start;
+            navMeshLink.endPoint = end;
+
+            // Optional: Weitere Einstellungen
+            navMeshLink.width = 1.0f;
+            navMeshLink.costModifier = -1;
+            navMeshLink.bidirectional = true;
+
+            // Aktualisiere den Link
+            navMeshLink.UpdateLink();
+            //positionsToCheck.Enqueue(end);
+            //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
+            list.Add(end);
+
+        }
+
+    }
+
+    void CreateNavMeshLinkMitBeidenAgenten(Vector3 start, Vector3 end)
+    {
+        if (isNavMeshLinkPossible(start, end))
+        {
+            //Debug.Log("link");
+            // Erstelle ein neues GameObject für den NavMeshLink
+            GameObject linkObject = new GameObject("NavMeshLink");
+            var navMeshLink = linkObject.AddComponent<NavMeshLink>();
+
+            // Setze die Start- und Endpunkte des Links
+            navMeshLink.startPoint = start;
+            navMeshLink.endPoint = end;
+
+            // Optional: Weitere Einstellungen
+            navMeshLink.width = 1.0f;
+            navMeshLink.costModifier = -1;
+            navMeshLink.bidirectional = true;
+
+            // Aktualisiere den Link
+            navMeshLink.UpdateLink();
+            positionsToCheck.Enqueue(end);
+            LinkGesetzt = true;
+            //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
+            List<Vector3> l = new List<Vector3>();
+            if (!GoalReachable)
+            {
+                l = durchquereNavMeshGebiet(end);
+            }
+            if (!GoalReachable)
+            {
+                constructNavMeshLinksToReachablePositions(l, false);
+            }
+            if (!GoalReachable)
+            {
+                constructNavMeshLinksToReachablePositions(l, true);
+            }
+
+            
+        }
+
+    }
+    bool LinkGesetzt = false;
     bool erweitertenLinkGesetzt = false;
     public GameObject tile;
 
@@ -534,7 +819,6 @@ public class TESTTEST : MonoBehaviour
 
                 // Aktualisiere den Link
                 navMeshLink.UpdateLink();
-                positionsToCheck.Enqueue(end);
 
                 // Erstelle ein neues GameObject für den NavMeshLink
                 GameObject linkObject2 = new GameObject("NavMeshLink");
@@ -551,17 +835,12 @@ public class TESTTEST : MonoBehaviour
 
                 // Aktualisiere den Link
                 navMeshLink2.UpdateLink();
-                positionsToCheck.Enqueue(end);
-                erweitertenLinkGesetzt = true;
+                //erweitertenLinkGesetzt = true;
                 check(zwischenposition, start, end);
+                
                 pos = end;
                 surface.BuildNavMesh();
-                List<Vector3> l2 = durchquereNavMeshGebiet(end);
-                if (!GoalReachable)
-                {
-                    constructNavMeshLinksToReachablePositions(l2, true);
-
-                }
+                
             }
         }
     }
@@ -583,7 +862,7 @@ public class TESTTEST : MonoBehaviour
         {
             //zerstöre alle Objekte, die in der NavLink Linie liegen
             deleteObjectsBetween(startpos, zwischenpos);
-            Instantiate(newTile, zwischenpos, Quaternion.identity);
+            AllTiles.Add(Instantiate(newTile, zwischenpos, Quaternion.identity));
             //unterhalb auch noch mit Objekten füllen
             deleteObjectsBetween(zwischenpos, endpos);
         }
@@ -599,7 +878,8 @@ public class TESTTEST : MonoBehaviour
             Debug.Log("Entferne Objekt oberhalb der Position: " + hit.collider.name);
 
             // Entferne das getroffene Objekt
-            Destroy(hit.collider.gameObject);
+            Destroy(hit.collider.gameObject); 
+            
 
             // Aktualisiere die Position, um direkt hinter dem entfernten Objekt zu starten
             position = hit.point + Vector3.up * 0.01f; // Ein kleiner Abstand, um sicherzustellen, dass du nicht immer das gleiche Objekt triffst
@@ -641,6 +921,8 @@ public class TESTTEST : MonoBehaviour
                     Destroy(hit.collider.gameObject);
                     Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
                     start = hit.point + direction.normalized * 0.01f;
+                    direction = end - start;
+                    distance = direction.magnitude;
                     positions.Add(hit.collider.gameObject.transform.position);
                 }
                 else

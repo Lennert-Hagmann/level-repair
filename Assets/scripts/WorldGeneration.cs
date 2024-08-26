@@ -76,7 +76,7 @@ public class WorldGeneration : MonoBehaviour
 
         surface.BuildNavMesh();
         Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
-        Debug.LogWarning(startPosition);
+        //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
         NavMeshLinkScript.GetComponent<TESTTEST>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
@@ -91,7 +91,7 @@ public class WorldGeneration : MonoBehaviour
 
             NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
             NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-            NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent(startPosition);
+            NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
         }
 
     }
@@ -113,7 +113,7 @@ public class WorldGeneration : MonoBehaviour
 
                 Debug.Log("Ziel ist für Spieler NICHT erreichbar");
                 //erweiterter Agent
-                NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent(start);
+                NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
             }
         }
     }
