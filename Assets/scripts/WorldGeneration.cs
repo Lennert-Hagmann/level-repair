@@ -62,6 +62,7 @@ public class WorldGeneration : MonoBehaviour
     public GameObject NavMeshLinkScript;
     public GameObject new_tile;
     public bool erweitert;
+    public GameObject playerFallScript;
 
     private void Start()
     {
@@ -78,6 +79,8 @@ public class WorldGeneration : MonoBehaviour
         Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
         //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
+        Debug.LogWarning("Start Position: " + startPosition.ToString());
+        //playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;
         NavMeshLinkScript.GetComponent<TESTTEST>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
@@ -419,6 +422,13 @@ public class WorldGeneration : MonoBehaviour
         Last = Instantiate(end_tile, Last.transform.position, Quaternion.identity);
         Last.layer = 7;
 
+    }
+
+    public void ReloadPlayerPos()
+    {
+
+        player.transform.position = spawnPosition.position;
+        player.transform.rotation = spawnPosition.rotation;
     }
 
 

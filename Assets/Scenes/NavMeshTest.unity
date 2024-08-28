@@ -199,6 +199,7 @@ GameObject:
   m_Component:
   - component: {fileID: 342444175}
   - component: {fileID: 342444176}
+  - component: {fileID: 342444177}
   m_Layer: 0
   m_Name: TestScript
   m_TagString: Untagged
@@ -228,7 +229,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 342444173}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6aa73d966771cb3478791f25c5fd0579, type: 3}
   m_Name: 
@@ -237,6 +238,8 @@ MonoBehaviour:
   player: {fileID: 1218494611}
   PlayerStartPosition: {x: 0, y: 0, z: 0}
   GoalTile: {fileID: 0}
+  reachablePositions: []
+  zwischenpos: {x: 0, y: 0, z: 0}
   AllTiles: []
   edgeDetectionRadius: 0.5
   ColorChange: 0
@@ -249,7 +252,21 @@ MonoBehaviour:
     m_Bits: 4294967295
   tile: {fileID: 0}
   newTile: {fileID: 0}
+  pos: {x: 0, y: 0, z: 0}
   destroyedTile: {fileID: 91341454588760603, guid: b15f826d412ebca4d94d7ad5d5cb2e22, type: 3}
+--- !u!114 &342444177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 342444173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e877c4dfd521ab543b2039d3ff0a5c42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ob: {fileID: 1922788329}
 --- !u!1001 &350249269
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1770,6 +1787,11 @@ Transform:
 Transform:
   m_CorrespondingSourceObject: {fileID: 5616032547581009862, guid: 3c7a89e36cb54d545ae41e5effbea22b, type: 3}
   m_PrefabInstance: {fileID: 755587103}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1922788329 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 91341454588760603, guid: bfe1a88f739745743ab283072b5b76c5, type: 3}
+  m_PrefabInstance: {fileID: 868982830}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &2015791412 stripped
 Transform:
