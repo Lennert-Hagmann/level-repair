@@ -21,20 +21,30 @@ public class PlayerFall : MonoBehaviour
         Time.timeScale = 1f;
         stopped = false;
              gameOverUI.SetActive(false); // Stellt sicher, dass das UI zu Beginn deaktiviert ist
-        }
+        Invoke("RestorePlayer", 5f);
+        Invoke("RestorePlayer", 10f);
+    }
 
         void Update()
         {
             if (!stopped && player.transform.position.y < fallThreshold)
             {
                 stopped = true; 
-            player.transform.position=new Vector3(10,10,10);
+            //player.transform.position=new Vector3(10,10,10);
 
             ActivateGameOverUI();
-            }
+            //player.transform.position = initialPosition;
         }
+            if(stopped)
+        {
+            
 
-        void ActivateGameOverUI()
+        }
+        
+    }
+    
+
+    void ActivateGameOverUI()
         {
             Time.timeScale = 0f; // Stoppt das Spiel
         Cursor.visible = true;
@@ -44,13 +54,16 @@ public class PlayerFall : MonoBehaviour
         }
 
         public void RestorePlayer()
-    {
+        {
         
         Debug.LogWarning("Restore Player; Start position: " + initialPosition.ToString());
-        cube.transform.position=initialPosition ; // Setzt den Spieler an die Startposition zurück
+        cube.transform.position = initialPosition; // Setzt den Spieler an die Startposition zurück
+        //Transform a = new Transform(initialPosition,);
+        Debug.LogWarning("SpielerPosition VORHER: "+player.transform.position);
         player.transform.position = initialPosition;
-        WorldGeneration.GetComponent<WorldGeneration>().ReloadPlayerPos();
-        Time.timeScale = 0f; // Setzt das Spiel fort
+        Debug.LogWarning("SpielerPosition nachHER: " + player.transform.position);
+        //WorldGeneration.GetComponent<WorldGeneration>().ReloadPlayerPos();
+        Time.timeScale = 1f; // Setzt das Spiel fort
             gameOverUI.SetActive(false); // Deaktiviert das UI
         }
 

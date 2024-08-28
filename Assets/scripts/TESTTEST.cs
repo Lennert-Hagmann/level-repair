@@ -255,7 +255,11 @@ public class TESTTEST : MonoBehaviour
         {
             surface.BuildNavMesh();
             erweiteterAgent();
-        }  
+        }
+        else
+        {
+            //speicher die Karte
+        }
         
     }
 

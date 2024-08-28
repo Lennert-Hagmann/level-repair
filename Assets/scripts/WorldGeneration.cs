@@ -80,7 +80,7 @@ public class WorldGeneration : MonoBehaviour
         //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
         Debug.LogWarning("Start Position: " + startPosition.ToString());
-        //playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;
+        playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;
         NavMeshLinkScript.GetComponent<TESTTEST>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
