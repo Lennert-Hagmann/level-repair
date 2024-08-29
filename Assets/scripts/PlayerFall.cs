@@ -21,8 +21,8 @@ public class PlayerFall : MonoBehaviour
         Time.timeScale = 1f;
         stopped = false;
              gameOverUI.SetActive(false); // Stellt sicher, dass das UI zu Beginn deaktiviert ist
-        Invoke("RestorePlayer", 5f);
-        Invoke("RestorePlayer", 10f);
+        //Invoke("RestorePlayer", 5f);
+        //Invoke("RestorePlayer", 10f);
     }
 
         void Update()
@@ -34,11 +34,6 @@ public class PlayerFall : MonoBehaviour
 
             ActivateGameOverUI();
             //player.transform.position = initialPosition;
-        }
-            if(stopped)
-        {
-            
-
         }
         
     }
@@ -57,7 +52,7 @@ public class PlayerFall : MonoBehaviour
         {
         
         Debug.LogWarning("Restore Player; Start position: " + initialPosition.ToString());
-        cube.transform.position = initialPosition; // Setzt den Spieler an die Startposition zurück
+        //cube.transform.position = initialPosition; // Setzt den Spieler an die Startposition zurück
         //Transform a = new Transform(initialPosition,);
         Debug.LogWarning("SpielerPosition VORHER: "+player.transform.position);
         player.transform.position = initialPosition;
@@ -73,6 +68,12 @@ public class PlayerFall : MonoBehaviour
             SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Lädt die aktuelle Szene neu
         stopped = false;
         Time.timeScale = 1f; // Setzt die Zeit zurück, falls pausiert
+    }
+
+    public void Menu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
     }
     
 }

@@ -42,11 +42,19 @@ public class WorldGeneration : MonoBehaviour
     private List<int> offset;
     private List<int> values;
 
+    public GameObject gameWinUI;
+
 
     // Update is called once per frame
     void Update()
     {
-        PlayerReachedGoal();
+        if (PlayerReachedGoal())
+        {
+            gameWinUI.SetActive(true);
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+            Time.timeScale = 0f;
+        }
     }
 
     public bool PlayerReachedGoal()
@@ -66,7 +74,8 @@ public class WorldGeneration : MonoBehaviour
 
     private void Start()
     {
-
+        Time.timeScale = 1f;
+        gameWinUI.SetActive(false);
         NavMeshLinkScript.GetComponent<TESTTEST>().newTile = new_tile;
         diamond_square(33, 0, 10, 0, 1);
         createTiles();
