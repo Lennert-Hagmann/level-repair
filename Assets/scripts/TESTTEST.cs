@@ -189,7 +189,6 @@ public class TESTTEST : MonoBehaviour
         List<Vector3> newPosDurchErweitertenSprung = new List<Vector3>();
         if (!GoalReachable)
         {
-            //constructNavMeshLinksToReachablePositions(NavMesh, true);
             List<Vector3> sortedNavMesh = NavMesh
             .OrderByDescending(v => v.x)  // Sortiere nach der X-Koordinate absteigend
             .ThenByDescending(v => v.z)   // Sortiere nach der Z-Koordinate absteigend
@@ -598,10 +597,7 @@ public class TESTTEST : MonoBehaviour
     {
         for (int height = -1; height <= 1; height++)
         {
-            CreateNavMeshLink(position, new Vector3(position.x - 4, position.y + height, position.z));
-            CreateNavMeshLink(position, new Vector3(position.x + 4, position.y + height, position.z));
-            CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z + 4));
-            CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z - 4));
+            
             for (int x = -3; x <= 3; x++)
             {
                 for (int z = -3; z <= 3; z++)
@@ -616,6 +612,10 @@ public class TESTTEST : MonoBehaviour
                     }
                 }
             }
+            CreateNavMeshLink(position, new Vector3(position.x - 4, position.y + height, position.z));
+            CreateNavMeshLink(position, new Vector3(position.x + 4, position.y + height, position.z));
+            CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z + 4));
+            CreateNavMeshLink(position, new Vector3(position.x, position.y + height, position.z - 4));
         }
     }
 
@@ -656,10 +656,6 @@ public class TESTTEST : MonoBehaviour
         { 
             constructNavMeshLinksToReachablePositions(l, false); 
         }
-
-
-
-
     }
 
     private void DebugShow(List<Vector3> positions)
