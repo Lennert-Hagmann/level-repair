@@ -13,6 +13,8 @@ using System.IO;
 public class WorldGeneration : MonoBehaviour
 {
 
+
+
     public Transform spawnPosition;
     public GameObject tile;
     public GameObject end_tile;
@@ -69,16 +71,16 @@ public class WorldGeneration : MonoBehaviour
 
     public GameObject NavMeshLinkScript;
     public GameObject new_tile;
-    public bool erweitert;
+    public static bool erweitert;
     public GameObject playerFallScript;
 
     private void Start()
     {
+        Debug.LogWarning(difficulty.Difficulty.ToString());
         Time.timeScale = 1f;
         gameWinUI.SetActive(false);
         NavMeshLinkScript.GetComponent<TESTTEST>().newTile = new_tile;
-        diamond_square(33, 0, 10, 0, 1);
-        createTiles();
+        erstelleWelt(difficulty.Difficulty);
 
         //NavMeshLinkScript.GetComponent<TESTTEST>().deleteObjectsBetween(new Vector3 (4,0,0), new Vector3(4, 0, 10));
 
@@ -396,14 +398,14 @@ public class WorldGeneration : MonoBehaviour
     }
 
     GameObject Last = null;
-    private void createTiles()
+    private void createTiles(int deleteHeight1, int deleteHeight2, int deleteHeight3)
     {
         bool isSpawned = false;
         foreach (PositionPoint p in map)
         {
 
             int height = p.getValue();
-            if (height > 2 && height != 5 && height != 8)
+            if (height > 2 && height != deleteHeight1 && height != deleteHeight2 && height != deleteHeight3)
             {
                 for (int i = 0; i < height; i++)
                 {
@@ -450,6 +452,23 @@ public class WorldGeneration : MonoBehaviour
             {
                 map[i, j].log();
             }
+        }
+    }
+
+    private void erstelleWelt(int diff)
+    {
+        if(diff == 0)
+        {
+            diamond_square(33, 0, 8, 0, 1); createTiles(5,5,5);
+        }
+        else if(diff == 1)
+        {
+
+            diamond_square(33, 0, 12, -1, 2); createTiles(5,8,8);
+        }
+        else if (diff == 2)
+        {
+            diamond_square(33, 0, 12, -2, 2); createTiles(5, 8, 9);
         }
     }
 

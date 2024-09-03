@@ -464,7 +464,7 @@ public class TESTTEST : MonoBehaviour
 
 
 
-    public bool ColorChange;
+    public static bool ColorChange;
     public Color ColorChangeFarbe;
     public bool markOnlyNewPositions;
     public List<Vector3> ColorChangedPositions;
