@@ -109,28 +109,6 @@ public class WorldGeneration : MonoBehaviour
         }
 
     }
-    private Coroutine laufendeCoroutine;
-    IEnumerator StoppeNachZeit(float sekunden)
-    {
-        yield return new WaitForSeconds(sekunden);
-        NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable = true;
-    }
-    IEnumerator agentMitZeitbegrenzung()
-    {
-        yield return new WaitForSeconds(60f);
-    }
-    public void agent()
-    {
-        Debug.LogWarning("AAA");
-        NavMeshLinkScript.GetComponent<TESTTEST>().Agent(new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z));
-    }
-
-    public void erweiteterAgent()
-    {
-
-        Debug.LogWarning("AAA");
-        NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
-    }
 
     void checkGoalReachable(Vector3 start)
     {
@@ -402,7 +380,15 @@ public class WorldGeneration : MonoBehaviour
             {
                 if (i == 0 & j == 0 | i == 0 & j == maplength - 1 | i == maplength - 1 & j == 0 | i == maplength - 1 & j == maplength - 1)
                 {
-                    map[i, j] = new PositionPoint(i, j, values.ElementAt(UnityEngine.Random.Range(0, count)));   //weise den Eckwerten der Map einen Value zu
+                    if(i==0 &&  j == 0)
+                    {
+                        map[i, j] = new PositionPoint(i, j, values.ElementAt(3));
+                    }
+                    else
+                    {
+
+                        map[i, j] = new PositionPoint(i, j, values.ElementAt(UnityEngine.Random.Range(0, count)));   //weise den Eckwerten der Map einen Value zu
+                    }
                 }
                 else
                 {
@@ -490,7 +476,7 @@ public class WorldGeneration : MonoBehaviour
         }
         else if (diff == 2)
         {
-            diamond_square(33, 0, 12, -2, 2); createTiles(5, 8, 10);
+            diamond_square(33, 0, 12, -2, 2); createTiles(5, 8, 9);
         }
     }
 
