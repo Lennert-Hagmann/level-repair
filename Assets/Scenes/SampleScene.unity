@@ -414,7 +414,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.20000005
+      value: -4.8
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f, type: 3}
       propertyPath: m_LocalPosition.y
@@ -422,7 +422,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4
+      value: -9
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1025,7 +1025,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.20000005
+      value: -4.8
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1033,7 +1033,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4
+      value: -9
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1082,7 +1082,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3893294197879345259, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 3893294197879345259, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1090,7 +1090,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3893294197879345259, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 3893294197879345259, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1158,14 +1158,13 @@ MonoBehaviour:
   spawnPosition: {fileID: 594702075}
   tile: {fileID: 91341454588760603, guid: b15f826d412ebca4d94d7ad5d5cb2e22, type: 3}
   end_tile: {fileID: 91341454588760603, guid: 3c7a89e36cb54d545ae41e5effbea22b, type: 3}
-  destroyed_tile: {fileID: 91341454588760603, guid: bfe1a88f739745743ab283072b5b76c5, type: 3}
+  destroyed_tile: {fileID: 7234551103986769175, guid: 6326f84bfbd1b8a49901ac6e42eb77a1, type: 3}
   surface: {fileID: 1262786669}
   debugCheck: 0
   player: {fileID: 2086308168}
   gameWinUI: {fileID: 1906328804}
   NavMeshLinkScript: {fileID: 1543195248}
   new_tile: {fileID: 91341454588760603, guid: 23e70c7bec66e9e4d957d2f1740c523f, type: 3}
-  erweitert: 1
   playerFallScript: {fileID: 926718568}
   maxVerticalDistance: 1
   maxHorizontalDistance: 3
@@ -1731,7 +1730,6 @@ MonoBehaviour:
   zwischenpos: {x: 0, y: 0, z: 0}
   AllTiles: []
   edgeDetectionRadius: 0.2
-  ColorChange: 1
   ColorChangeFarbe: {r: 0, g: 0, b: 0, a: 0}
   markOnlyNewPositions: 0
   ColorChangedPositions: []

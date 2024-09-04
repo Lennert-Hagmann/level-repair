@@ -99,15 +99,37 @@ public class WorldGeneration : MonoBehaviour
         NavMeshLinkScript.GetComponent<TESTTEST>().Agent(startPosition);
 
 
-        
+
         if(NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable == false && erweitert)
         {
 
-            NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
-            NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-            NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
+        NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
+        NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
+        NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
         }
 
+    }
+    private Coroutine laufendeCoroutine;
+    IEnumerator StoppeNachZeit(float sekunden)
+    {
+        yield return new WaitForSeconds(sekunden);
+        NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable = true;
+    }
+    IEnumerator agentMitZeitbegrenzung()
+    {
+        yield return new WaitForSeconds(60f);
+    }
+    public void agent()
+    {
+        Debug.LogWarning("AAA");
+        NavMeshLinkScript.GetComponent<TESTTEST>().Agent(new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z));
+    }
+
+    public void erweiteterAgent()
+    {
+
+        Debug.LogWarning("AAA");
+        NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
     }
 
     void checkGoalReachable(Vector3 start)
@@ -468,7 +490,7 @@ public class WorldGeneration : MonoBehaviour
         }
         else if (diff == 2)
         {
-            diamond_square(33, 0, 12, -2, 2); createTiles(5, 8, 9);
+            diamond_square(33, 0, 12, -2, 2); createTiles(5, 8, 10);
         }
     }
 

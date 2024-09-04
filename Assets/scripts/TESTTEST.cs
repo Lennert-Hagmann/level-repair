@@ -38,7 +38,17 @@ public class TESTTEST : MonoBehaviour
         //GenerateNavMeshLinks(startPosition);
     }
 
+    private bool ZielMitDoppelsprungerreichbar(Vector3 p)
+    {
+        Vector3 zielposition = GoalTile.transform.position;
+        if(Math.Abs(p.y - zielposition.y) < 2 && Math.Abs(p.x - zielposition.x) < 6 && Math.Abs(p.z - zielposition.z) < 6)
+        {
+            return true;
+        }
+        return false;
+    }
 
+    
 
     bool IstImSpielBereich(Vector3 p)
     {
@@ -54,6 +64,8 @@ public class TESTTEST : MonoBehaviour
     //gibt die erste Position zurück, die durch einen Doppelsprung erreicht werden kann
     Vector3 erweiteterSprung(Vector3 p)
     {
+        
+        if(Vector3.Distance(p, GoalTile.transform.position) < 3)
         Debug.Log("erweiteter Sprung mit Startposition "+ p.ToString());    
         Vector3 finalPosition = new Vector3(100, 100, 100); 
         Vector3 Test = new Vector3(100, 100, 100);
@@ -171,9 +183,10 @@ public class TESTTEST : MonoBehaviour
         return new Vector3(100, 100, 100);
     }
 
+    private int Iteration = 1;
     public void erweiteterAgent()
     {
-        Debug.LogWarning("ERWEITERTER AGENT");
+        Debug.LogWarning("ERWEITERTER AGENT mit Iteration "+Iteration);
         reachablePositions.Add(PlayerStartPosition);
         Vector3 closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions); //NavMeshs, die nur 1 Position enthalten werden nicht berücksichtigt
         Debug.Log("Nächste Position: " + closestPos.ToString());
@@ -185,8 +198,10 @@ public class TESTTEST : MonoBehaviour
         //{
         //    Debug.Log(pos.ToString());
         //}
-        bool gefunden = false;
-        List<Vector3> newPosDurchErweitertenSprung = new List<Vector3>();
+        bool gefunden = false; 
+        bool ZielErreichbar = false;
+        //List<Vector3> newPosDurchErweitertenSprung = new List<Vector3>();
+        Vector3 newPos = new Vector3();
         if (!GoalReachable)
         {
             List<Vector3> sortedNavMesh = NavMesh
@@ -195,24 +210,63 @@ public class TESTTEST : MonoBehaviour
             .ToList();
             foreach (Vector3 position in sortedNavMesh)
             {
+
+                if (ZielMitDoppelsprungerreichbar(position)) { ZielErreichbar = true; }
                 if (gefunden == false)
                 {
                     Vector3 SprungPos = erweiteterSprung(position);
                     if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
                     {
                         Debug.Log("Neue Position gefunden " + SprungPos.ToString() +" über Zwischenposition: " + zwischenpos.ToString());
-                        gefunden = true;
-                        ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
-                        newPosDurchErweitertenSprung.Add(SprungPos);
+                        if (ZielErreichbar)
+                        {
+                            if(SprungPos == GoalTile.transform.position)
+                            {
+
+                                gefunden = true;
+                                ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
+                                //newPosDurchErweitertenSprung.Add(SprungPos);
+                                newPos = SprungPos;
+                            }
+                            else
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            gefunden = true;
+                            ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
+                            //newPosDurchErweitertenSprung.Add(SprungPos);
+                            newPos = SprungPos;
+                        }
                     }
                 }
 
             }
+            if(gefunden == false)
+            {
+                //kein neues Objekt erreicht worden, beende Agent
+                GoalReachable = true;
+                Debug.LogWarning("kein Objekt erreicht worden durch DOPPELSPRUNG");
+            }
 
         }
-        List<Vector3> newPositions = new List<Vector3>();
-        foreach (Vector3 pos in newPosDurchErweitertenSprung)
+        Agent(newPos);
+        if(!GoalReachable)
         {
+            if(Iteration < 3)
+            {
+                Iteration++;
+                erweiteterAgent();
+            }
+            //erweiteterAgent();
+        }
+        /*
+        List<Vector3> newPositions = new List<Vector3>();
+        //foreach (Vector3 pos in newPosDurchErweitertenSprung)
+        //{
+        Vector3 pos = newPos;
             Debug.Log("Untersuche " + pos.ToString());
             List<Vector3> list = durchquereNavMeshGebiet(pos);
             if (!GoalReachable)
@@ -249,7 +303,7 @@ public class TESTTEST : MonoBehaviour
                     durchquereNavMeshGebiet(p);
                 }
             }
-        }
+        //}
         if (!GoalReachable)
         {
             surface.BuildNavMesh();
@@ -259,6 +313,7 @@ public class TESTTEST : MonoBehaviour
         {
             //speicher die Karte
         }
+        */
         
     }
 
@@ -456,7 +511,7 @@ public class TESTTEST : MonoBehaviour
             }
             else
             {
-                
+                Debug.LogWarning("Ziel ist für Spieler NICHT erreichbar");
             }
         }
     }
@@ -648,6 +703,7 @@ public class TESTTEST : MonoBehaviour
     List<Vector3> l = new List<Vector3>();
     public void Agent(Vector3 startPosition)
     {
+        Debug.Log("AA aus TEST");
         if (!GoalReachable)
         {
             l = durchquereNavMeshGebiet(startPosition);
