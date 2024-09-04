@@ -87,7 +87,8 @@ public class WorldGeneration : MonoBehaviour
         //diamond_step(testmap, new PositionPoint(0, 0, 0), new PositionPoint(0, 2, 2), new PositionPoint(2, 0, 3), new PositionPoint(2, 2, 5),  testoffset, testvalues);
 
         surface.BuildNavMesh();
-        Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
+        //Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
+        Vector3 startPosition = new Vector3(1, 3,1);
         //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
         Debug.LogWarning("Start Position: " + startPosition.ToString());
@@ -372,23 +373,26 @@ public class WorldGeneration : MonoBehaviour
         if (!potenzVon2(testlength - 1)) { maplength = nextPotenzfor(testlength) + 1; }
         else { maplength = testlength; }
         int count = values.Count();
-
+        int startHöhe = 3;
+        int zielHöhe = 8;
         map = new PositionPoint[maplength, maplength];
         for (int i = 0; i < maplength; i++)
         {
             for (int j = 0; j < maplength; j++)
             {
-                if (i == 0 & j == 0 | i == 0 & j == maplength - 1 | i == maplength - 1 & j == 0 | i == maplength - 1 & j == maplength - 1)
+                if (i == 0 && j == 0 || i == 0 && j == 1 || i == 0 && j == 2 || i==1 &&j==0 || i==1 && j==1 || i==1 && j==2 || i==2 && j==0 || i==2 &&j==1 || i==2 && j==2)
                 {
-                    if(i==0 &&  j == 0)
-                    {
-                        map[i, j] = new PositionPoint(i, j, values.ElementAt(3));
-                    }
-                    else
-                    {
-
-                        map[i, j] = new PositionPoint(i, j, values.ElementAt(UnityEngine.Random.Range(0, count)));   //weise den Eckwerten der Map einen Value zu
-                    }
+                    map[i, j] = new PositionPoint(i, j, values.ElementAt(startHöhe));   //StartPosition
+                }
+                else if (i == 0 & j == maplength - 1 | i == maplength - 1 & j == 0)
+                {
+                    map[i, j] = new PositionPoint(i, j, values.ElementAt(UnityEngine.Random.Range(0, count)));   //weise den Eckwerten der Map einen Value zu
+                }
+                else if(i == maplength - 1 & j == maplength - 1 || i==maplength-3 && j==maplength-3 || i==maplength-3 && j==maplength-2 ||i==maplength-3 && j==maplength-1
+                    || i == maplength - 2 && j == maplength - 3 || i == maplength - 2 && j == maplength - 2 || i == maplength - 2 && j == maplength - 1 
+                    || i == maplength - 1 && j == maplength - 3 || i == maplength - 1 && j == maplength - 2)
+                {
+                    map[i, j] = new PositionPoint(i, j, values.ElementAt(zielHöhe));
                 }
                 else
                 {
@@ -411,35 +415,62 @@ public class WorldGeneration : MonoBehaviour
         bool isSpawned = false;
         foreach (PositionPoint p in map)
         {
-
-            int height = p.getValue();
-            if (height > 2 && height != deleteHeight1 && height != deleteHeight2 && height != deleteHeight3)
+            if(p.getX() == maplength-1 && p.getY()==maplength-1 || p.getX() == maplength - 1 && p.getY() == maplength - 2 || p.getX() == maplength - 1 && p.getY() == maplength - 3 
+            || p.getX() == maplength -2 && p.getY() == maplength - 1 || p.getX() == maplength - 2 && p.getY() == maplength - 2 || p.getX() == maplength - 2 && p.getY() == maplength - 3
+            || p.getX() == maplength -3 && p.getY() == maplength - 1 || p.getX() == maplength - 3 && p.getY() == maplength - 2 || p.getX() == maplength - 3 && p.getY() == maplength - 3)
             {
-                for (int i = 0; i < height; i++)
+                for (int i = 0; i < p.getValue(); i++)
                 {
                     NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
 
                 }
-                GameObject Top = Instantiate(tile, new Vector3(p.getX(), height, p.getY()), Quaternion.identity);
-                Last = Top;
-                Top.layer = 7;
-                NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
-                if (!isSpawned)
+                if(p.getX() == maplength - 1 && p.getY() == maplength - 1)
                 {
+                    Last = Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
+                    //NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Last);
+                    NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
+                }
+                else
+                {
+                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity));
+                    NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
+                }
+            }
+            else
+            {
+                int height = p.getValue();
+                if (height > 2 && height != deleteHeight1 && height != deleteHeight2 && height != deleteHeight3)
+                {
+                    for (int i = 0; i < height; i++)
+                    {
+                        NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
 
-                    spawnPosition.position = new Vector3(p.getX(), height + 1, p.getY());
-                    //spawnPosition.rotation = Quaternion.Euler(0,210,0);
-                    isSpawned = true;
-                    player.transform.position = spawnPosition.position;
-                    player.transform.rotation = spawnPosition.rotation;
+                    }
+                    GameObject Top = Instantiate(tile, new Vector3(p.getX(), height, p.getY()), Quaternion.identity);
+                    //Last = Top;
+                    Top.layer = 7;
+                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
+                    /*
+                    if (!isSpawned)
+                    {
+
+                        spawnPosition.position = new Vector3(p.getX(), height + 1, p.getY());
+                        //spawnPosition.rotation = Quaternion.Euler(0,210,0);
+                        isSpawned = true;
+                        player.transform.position = spawnPosition.position;
+                        player.transform.rotation = spawnPosition.rotation;
+                    }
+                    */
                 }
             }
 
+                
+
         }
         //Debug.LogWarning(" Postion des letzten " + Last.transform.position);
-        Destroy(Last);
-        Last = Instantiate(end_tile, Last.transform.position, Quaternion.identity);
-        Last.layer = 7;
+        //Destroy(Last);
+        //Last = Instantiate(end_tile, Last.transform.position, Quaternion.identity);
+        //Last.layer = 7;
 
     }
 

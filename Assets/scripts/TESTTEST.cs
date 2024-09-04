@@ -522,6 +522,7 @@ public class TESTTEST : MonoBehaviour
     public Color ColorChangeFarbe;
     public bool markOnlyNewPositions;
     public List<Vector3> ColorChangedPositions;
+    public List<Vector3> GoalPositions;
 
 
     public bool GoalReachable = false;
@@ -532,7 +533,7 @@ public class TESTTEST : MonoBehaviour
     {
         foreach (Vector3 position in positions)
         {
-            if (markOnlyNewPositions && ColorChangedPositions.Contains(position))
+            if (markOnlyNewPositions && ColorChangedPositions.Contains(position) || GoalPositions.Contains(position))
             {
                 //nothing
             }
