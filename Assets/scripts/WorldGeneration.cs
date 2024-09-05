@@ -9,6 +9,7 @@ using UnityEngine.AI;
 using Unity.AI.Navigation;
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Net.Security;
 
 public class WorldGeneration : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class WorldGeneration : MonoBehaviour
     public Transform spawnPosition;
     public GameObject tile;
     public GameObject end_tile;
+    public GameObject start_tile;
     public GameObject destroyed_tile;
 
     //navmesh
@@ -259,122 +261,17 @@ public class WorldGeneration : MonoBehaviour
 
 
 
-    /*
-    public void generateNavMeshLinks()
-    {
-         Vector3 startPosition = new Vector3(0, 0, 0);
-        float maxVerticalDistance = 1.0f;
-        float maxHorizontalDistance = 3.0f;
-
-        // Liste der bereits besuchten Bereiche
-        List<Vector3> visitedPositions = new List<Vector3>();
-        // Warteschlange für Positionen, die noch untersucht werden müssen
-        Queue<Vector3> positionsToCheck = new Queue<Vector3>();
-
-        // Füge die Startposition zur Warteschlange hinzu
-        positionsToCheck.Enqueue(startPosition);
-        visitedPositions.Add(startPosition);
-
-        while (positionsToCheck.Count > 0)
-        {
-            // Nimm die nächste Position aus der Warteschlange
-            Vector3 currentPosition = positionsToCheck.Dequeue();
-
-            // Untersuche die Kanten des aktuellen Bereichs
-            Vector3[] possiblePositions = new Vector3[]
-            {
-                currentPosition + new Vector3(1, 0, 0), // rechts
-                currentPosition + new Vector3(-1, 0, 0), // links
-                currentPosition + new Vector3(0, 0, 1), // vorwärts
-                currentPosition + new Vector3(0, 0, -1), // rückwärts
-                currentPosition + new Vector3(0, 1, 0), // nach oben
-                currentPosition + new Vector3(0, -1, 0) // nach unten
-            };
-
-            foreach (Vector3 possiblePosition in possiblePositions)
-            {
-                // Berechne die Distanz zur aktuellen Position
-                float verticalDistance = Mathf.Abs(possiblePosition.y - currentPosition.y);
-                float horizontalDistance = Vector3.Distance(new Vector3(possiblePosition.x, 0, possiblePosition.z), new Vector3(currentPosition.x, 0, currentPosition.z));
-
-                // Prüfe, ob die Position erreichbar ist (innerhalb der definierten Grenzen)
-                if (verticalDistance <= maxVerticalDistance && horizontalDistance <= maxHorizontalDistance)
-                {
-                    // Prüfe, ob die Position bereits besucht wurde
-                    if (!visitedPositions.Contains(possiblePosition))
-                    {
-                        // Erstelle einen NavMeshLink zwischen currentPosition und possiblePosition
-                        CreateNavMeshLink(currentPosition, possiblePosition);
-
-                        // Füge die neue Position zur Warteschlange und den besuchten Positionen hinzu
-                        positionsToCheck.Enqueue(possiblePosition);
-                        visitedPositions.Add(possiblePosition);
-                    }
-                }
-            }
-        }
-        //erfasse bereiche, die von StartPosition erreichbar sind
-        //checke, ob weitere Positionen von den Kanten des Bereichs erreichbar sind. Sie sind erreichbar, wenn sie maximal 1 Position über und 1 Position entfernt, oder auf gleicher Höhe maximal 3 Positionen entfernt sind
-        //wenn erreichbar, erstelle zwischen den beiden Bereichen einen NavMehLink
-
-
-        /*
-            // Example: Let's say you have two transforms, pointA and pointB, which represent the start and end of the link.
-            Transform pointA = ...; // Determine this dynamically based on your world generation
-            Transform pointB = ...; // Determine this dynamically based on your world generation
-
-            // Create a new GameObject to hold the NavMeshLink
-            GameObject linkObject = new GameObject("NavMeshLink");
-            var navMeshLink = linkObject.AddComponent<NavMeshLink>();
-
-            // Set the start and end points of the link
-            navMeshLink.startPoint = pointA.position;
-            navMeshLink.endPoint = pointB.position;
-
-            // Optional: Set other properties like width, cost, etc.
-            navMeshLink.width = 1.0f;
-            navMeshLink.costModifier = -1;  // Adjust cost if needed
-            navMeshLink.bidirectional = true;
-
-            // Optionally set the link's area type (e.g., jump, walk, etc.)
-            navMeshLink.area = NavMesh.GetAreaFromName("Walkable");  // Adjust based on your needs
-
-            // Enable the link
-            navMeshLink.UpdateLink();
-
-    }
-
-    void CreateNavMeshLink(Vector3 start, Vector3 end)
-    {
-        // Erstelle ein neues GameObject für den NavMeshLink
-        GameObject linkObject = new GameObject("NavMeshLink");
-        var navMeshLink = linkObject.AddComponent<NavMeshLink>();
-
-        // Setze die Start- und Endpunkte des Links
-        navMeshLink.startPoint = start;
-        navMeshLink.endPoint = end;
-
-        // Optionale Einstellungen, wie die Breite des Links
-        navMeshLink.width = 1.0f;
-        navMeshLink.costModifier = -1;
-        navMeshLink.bidirectional = true;
-
-        // Aktualisiere den Link
-        navMeshLink.UpdateLink();
-    }
-    */
+    
 
     public Transform getSpawnPosition() { return spawnPosition; }
 
     //erstelle ein 2 dimensionales Array (Map) von Position Points
-    private void createMap(List<int> values, int testlength)
+    private void createMap(List<int> values, int testlength, int startHöhe, int zielHöhe)
     {
         //sicherstellen, dass Länge 2^n +1 für beliebiges n ist. Sollte dies nicht der Fall sein, wird der nächstgrößte Wert genommen, der der Anforderung genügt
         if (!potenzVon2(testlength - 1)) { maplength = nextPotenzfor(testlength) + 1; }
         else { maplength = testlength; }
         int count = values.Count();
-        int startHöhe = 3;
-        int zielHöhe = 8;
         map = new PositionPoint[maplength, maplength];
         for (int i = 0; i < maplength; i++)
         {
@@ -424,17 +321,35 @@ public class WorldGeneration : MonoBehaviour
                     NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
 
                 }
-                if(p.getX() == maplength - 1 && p.getY() == maplength - 1)
+                if(p.getX() == maplength - 2 && p.getY() == maplength - 2)
                 {
                     Last = Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
+                    Last.layer = 7;
                     //NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Last);
                     NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
                 }
                 else
                 {
-                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity));
+                    GameObject Top = Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
+                    Top.layer = 7;
+                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
                     NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
                 }
+            }
+            else if(p.getX() == 0 && p.getY() == 0 || p.getX() == 0 && p.getY() == 1 || p.getX() == 0 && p.getY() == 2
+            || p.getX() == 1 && p.getY() == 0 || p.getX() == 1 && p.getY() == 1 || p.getX() == 1 && p.getY() == 2
+            || p.getX() == 2 && p.getY() == 0 || p.getX() == 2 && p.getY() == 1 || p.getX() == 2 && p.getY() == 2)
+            {
+                for (int i = 0; i < p.getValue(); i++)
+                {
+                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
+
+                }
+
+                GameObject Top = Instantiate(start_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
+                Top.layer = 7;
+                NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
+                NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
             }
             else
             {
@@ -498,23 +413,23 @@ public class WorldGeneration : MonoBehaviour
     {
         if(diff == 0)
         {
-            diamond_square(33, 0, 8, 0, 1); createTiles(5,5,5);
+            diamond_square(33, 0, 8, 0, 1,3,8); createTiles(5,5,5);
         }
         else if(diff == 1)
         {
 
-            diamond_square(33, 0, 12, -1, 2); createTiles(5,8,8);
+            diamond_square(33, 0, 12, -1, 2,3,10); createTiles(5,8,8);
         }
         else if (diff == 2)
         {
-            diamond_square(33, 0, 12, -2, 2); createTiles(5, 8, 9);
+            diamond_square(33, 0, 12, -2, 2,3,12); createTiles(5, 8, 9);
         }
     }
 
 
 
 
-    private void diamond_square(int testlength, int minValue, int maxValue, int minOffset, int maxOffset)
+    private void diamond_square(int testlength, int minValue, int maxValue, int minOffset, int maxOffset, int startHöhe, int zielHöhe)
     {
         //erstelle Intervalls für den Wertebereich (value)
         values = new List<int>();
@@ -526,7 +441,7 @@ public class WorldGeneration : MonoBehaviour
         }
 
         //erstelle Map
-        createMap(values, testlength);
+        createMap(values, testlength, startHöhe, zielHöhe);
 
         //erstelle Intervalls für den Offet Bereich 
         offset = new List<int>();

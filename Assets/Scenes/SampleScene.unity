@@ -1158,6 +1158,7 @@ MonoBehaviour:
   spawnPosition: {fileID: 594702075}
   tile: {fileID: 91341454588760603, guid: b15f826d412ebca4d94d7ad5d5cb2e22, type: 3}
   end_tile: {fileID: 91341454588760603, guid: 3c7a89e36cb54d545ae41e5effbea22b, type: 3}
+  start_tile: {fileID: 6842358023464639065, guid: 65430b13565297c41b0253fd79df0d16, type: 3}
   destroyed_tile: {fileID: 7234551103986769175, guid: 6326f84bfbd1b8a49901ac6e42eb77a1, type: 3}
   surface: {fileID: 1262786669}
   debugCheck: 0
@@ -1733,6 +1734,7 @@ MonoBehaviour:
   ColorChangeFarbe: {r: 0, g: 0, b: 0, a: 0}
   markOnlyNewPositions: 0
   ColorChangedPositions: []
+  GoalPositions: []
   GoalReachable: 0
   collisionMask:
     serializedVersion: 2

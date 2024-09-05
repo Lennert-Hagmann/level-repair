@@ -6,6 +6,7 @@ using System.Net;
 using TMPro;
 using Unity.AI.Navigation;
 using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
@@ -69,7 +70,7 @@ public class TESTTEST : MonoBehaviour
         Debug.Log("erweiteter Sprung mit Startposition "+ p.ToString());    
         Vector3 finalPosition = new Vector3(100, 100, 100); 
         Vector3 Test = new Vector3(100, 100, 100);
-        for (int height = -1; height <= 1; height++)
+        for (int height = 1; height >= 1; height--)
         {
             for (int x = 3; x >= -3; x--)
             {
@@ -139,23 +140,16 @@ public class TESTTEST : MonoBehaviour
     {
         Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString());
         Vector3 endPos;
-        for (int height = -1; height <= 1; height++)
+        for (int height = 1; height >= -1; height--)
         {
             for (int x = 3; x >= -3; x--)
             {
                 for (int z = 3; z >= -3; z--)
                 {
-                    if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
+                    endPos = new Vector3(zwischenpos.x + x, zwischenpos.y + height, zwischenpos.z + z);
+                    if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
                     {
-                        //do nothing
-                    }
-                    else
-                    {
-                        endPos = new Vector3(zwischenpos.x + x, zwischenpos.y + height, zwischenpos.z + z);
-                        if(IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
-                        {
-                            return endPos;
-                        }
+                        return endPos;
                     }
                 }
             }
@@ -182,6 +176,64 @@ public class TESTTEST : MonoBehaviour
         }
         return new Vector3(100, 100, 100);
     }
+
+    //gibt die erste Position zurück, die durch einen Doppelsprung erreicht werden kann
+    Vector3 Sprung1(Vector3 p)
+    {
+        Vector3 zero = Vector3.zero;
+        for(int height =1; height>=-1; height--)
+        {
+            for (int x = 3; x >= -3; x--)
+            {
+                zwischenpos = new Vector3(p.x + x, p.y + height, p.z);
+                Vector3 a = Sprung2(zwischenpos,p);
+                if (a != zero)
+                {
+                    return a;
+                }
+            }
+            for (int z = 3; z >= -3; z--)
+            {
+                zwischenpos = new Vector3(p.x, p.y + height, p.z+z);
+                Vector3 a = Sprung2(zwischenpos,p);
+                if (a != zero)
+                {
+                    return a;
+                }
+            }
+
+
+        }
+        return zero;
+    }
+
+    Vector3 Sprung2(Vector3 zwischenpos, Vector3 startPos) { 
+        Vector3 endPos;
+        
+        for (int height = 1; height >= -1; height--)
+        {
+            for (int x = 3; x >= -3; x--)
+            {
+                endPos= new Vector3(zwischenpos.x + x, zwischenpos.y + height, zwischenpos.z);
+                if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                {
+                    return endPos;
+                }
+            }
+            for (int z = 3; z >= -3; z--)
+            {
+                endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z+z);
+                if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                {
+                    return endPos;
+                }
+            }
+
+
+        }
+        return Vector3.zero;
+    }
+
 
     private int Iteration = 1;
     public void erweiteterAgent()
@@ -218,6 +270,7 @@ public class TESTTEST : MonoBehaviour
                     if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
                     {
                         Debug.Log("Neue Position gefunden " + SprungPos.ToString() +" über Zwischenposition: " + zwischenpos.ToString());
+                        reachablePositions.Add(SprungPos);
                         if (ZielErreichbar)
                         {
                             if(SprungPos == GoalTile.transform.position)
@@ -253,7 +306,7 @@ public class TESTTEST : MonoBehaviour
 
         }
         Agent(newPos);
-        if(!GoalReachable)
+        if (!GoalReachable)
         {
             if(Iteration < 3)
             {
@@ -935,7 +988,7 @@ public class TESTTEST : MonoBehaviour
             Debug.Log("Entferne Objekt oberhalb der Position: " + hit.collider.name);
 
             // Entferne das getroffene Objekt
-            Destroy(hit.collider.gameObject); 
+            Destroy(hit.collider.gameObject.transform.parent.gameObject); 
             
 
             // Aktualisiere die Position, um direkt hinter dem entfernten Objekt zu starten
@@ -975,7 +1028,7 @@ public class TESTTEST : MonoBehaviour
                 if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                 {
                     Debug.Log("Weg blockiert von: " + hit.collider.name);
-                    Destroy(hit.collider.gameObject);
+                    Destroy(hit.collider.gameObject.transform.parent.gameObject);       //vorher  Destroy(hit.collider.gameObject), damit wurde nur das KindObjekt gelöscht
                     Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
                     start = hit.point + direction.normalized * 0.01f;
                     direction = end - start;
@@ -989,9 +1042,22 @@ public class TESTTEST : MonoBehaviour
             }
             blockiert = true;
         }
+        List<Vector3> CreatedPositions = new List<Vector3>();
         foreach(Vector3 pos in positions)
         {
-            Instantiate(destroyedTile, pos, Quaternion.identity);
+            if (!CreatedPositions.Contains(pos))
+            {
+                CreatedPositions.Add(pos);
+                GameObject ob = Instantiate(destroyedTile, pos, Quaternion.identity);
+                Collider objectCollider = ob.GetComponent<Collider>();
+                if (objectCollider != null)
+                {
+                    Debug.LogWarning("TESTTESTTEST");
+                    objectCollider.enabled = false; // Deaktiviert den Collider
+                }
+                ob.GetComponent<Collider>().enabled = false;
+                ob.GetComponentInChildren<Collider>().enabled = false;
+            }
         }
     }
 
