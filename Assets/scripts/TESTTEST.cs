@@ -976,6 +976,8 @@ public class TESTTEST : MonoBehaviour
             //unterhalb auch noch mit Objekten füllen
             deleteObjectsBetween(zwischenpos, endpos);
         }
+        surface.RemoveData();
+        surface.BuildNavMesh() ;
     }
 
     void RemoveObjectsAbove(Vector3 position)
@@ -1008,40 +1010,45 @@ public class TESTTEST : MonoBehaviour
         
         List<Vector3> positions = new List<Vector3>();
         bool blockiert = true;
-        for (int height = 0; height <= 2; height++)
-        {
-            //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
-            Vector3 start = new Vector3(startpos.x, startpos.y + 1.1f + height, startpos.z);
-            Vector3 end = new Vector3(endpos.x, endpos.y + 1.1f + height, endpos.z);
-
-            // Berechne die Richtung vom Startpunkt zum Endpunkt
-            Vector3 direction = end - start;
-
-            // Berechne die Distanz zwischen den beiden Punkten
-            float distance = direction.magnitude;
-            // Führe den Raycast mit der Layer Mask durch
-            RaycastHit hit;
-
-            while (blockiert)
+        //links und rechts wird auch gelöscht
+        //for (float x=0.5f;x>=-0.5;x=x-0.5f)
+        //{
+            for (int height = 0; height <= 2; height++)
             {
-                Debug.Log("TT");
-                if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
+                //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
+                Vector3 start = new Vector3(startpos.x, startpos.y + 1.1f + height, startpos.z);
+                Vector3 end = new Vector3(endpos.x, endpos.y + 1.1f + height, endpos.z);
+
+                // Berechne die Richtung vom Startpunkt zum Endpunkt
+                Vector3 direction = end - start;
+
+                // Berechne die Distanz zwischen den beiden Punkten
+                float distance = direction.magnitude;
+                // Führe den Raycast mit der Layer Mask durch
+                RaycastHit hit;
+
+                while (blockiert)
                 {
-                    Debug.Log("Weg blockiert von: " + hit.collider.name);
-                    Destroy(hit.collider.gameObject.transform.parent.gameObject);       //vorher  Destroy(hit.collider.gameObject), damit wurde nur das KindObjekt gelöscht
-                    Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
-                    start = hit.point + direction.normalized * 0.01f;
-                    direction = end - start;
-                    distance = direction.magnitude;
-                    positions.Add(hit.collider.gameObject.transform.position);
+                    Debug.Log("TT");
+                    if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
+                    {
+                        Debug.Log("Weg blockiert von: " + hit.collider.name);
+                        Destroy(hit.collider.gameObject.transform.parent.gameObject);       //vorher  Destroy(hit.collider.gameObject), damit wurde nur das KindObjekt gelöscht
+                        Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                        start = hit.point + direction.normalized * 0.01f;
+                        direction = end - start;
+                        distance = direction.magnitude;
+                        positions.Add(hit.collider.gameObject.transform.position);
+                    }
+                    else
+                    {
+                        blockiert = false;
+                    }
                 }
-                else
-                {
-                    blockiert = false;
-                }
+                blockiert = true;
             }
-            blockiert = true;
-        }
+        //}
+        
         List<Vector3> CreatedPositions = new List<Vector3>();
         foreach(Vector3 pos in positions)
         {
