@@ -72,7 +72,7 @@ public class TESTTEST : MonoBehaviour
         Vector3 Test = new Vector3(100, 100, 100);
         for (int height = 1; height >= 1; height--)
         {
-            for (int x = 3; x >= -3; x--)
+            /*for (int x = 3; x >= -3; x--)
             {
                 for (int z = 3; z >= -3; z--)
                 {
@@ -95,7 +95,78 @@ public class TESTTEST : MonoBehaviour
 
                     }
                 }
+            }*/
+            for (int x = 0; x <= 3; x++)
+            {
+                // Positive x zuerst
+                
+                    int positiveX = x;  // z.B. 1, 2, 3
+                    for (int z = 0; z <= 3; z++)
+                    {
+                        // Positive Z zuerst
+                        if (z != 0 || x!=0) // Vermeidet den Fall z = 0
+                        {
+                            zwischenpos = new Vector3(p.x + x, p.y + height, p.z + z);
+                            if (IstImSpielBereich(zwischenpos))
+                            {
+                                finalPosition = erweiteterSprung2(zwischenpos, p);
+                                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                                {
+                                    return finalPosition;
+                                }
+                            }
+                            // Negative Z nach positive z
+                            int negativeZ = -z;
+                            zwischenpos = new Vector3(p.x + x, p.y + height, p.z + negativeZ);
+                            if (IstImSpielBereich(zwischenpos))
+                            {
+                                finalPosition = erweiteterSprung2(zwischenpos, p);
+                                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                                {
+                                    return finalPosition;
+                                }
+                            }
+                        }
+
+
+                    }
+                    // Negative x nach positive x
+                    int negativeX = -x;  // z.B. -1, -2, -3
+                    for (int z = 0; z <= 3; z++)
+                    {
+                        // Positive Z zuerst
+                        if (z != 0 || x !=0) // Vermeidet den Fall i = 0
+                        {
+                            zwischenpos = new Vector3(p.x + negativeX, p.y + height, p.z + z);
+                            if (IstImSpielBereich(zwischenpos))
+                            {
+                                finalPosition = erweiteterSprung2(zwischenpos, p);
+                                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                                {
+                                    return finalPosition;
+                                }
+                            }
+                            // Negative Z nach positive z
+                            int negativeZ = -z;
+                            zwischenpos = new Vector3(p.x + x, p.y + height, p.z + negativeZ);
+                            if (IstImSpielBereich(zwischenpos))
+                            {
+                                finalPosition = erweiteterSprung2(zwischenpos, p);
+                                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                                {
+                                    return finalPosition;
+                                }
+                            }
+                        }
+
+
+                    }
+                
             }
+
+            //Schleifenende
+
+
             zwischenpos = new Vector3(p.x - 4, p.y + height, p.z);
             if (IstImSpielBereich(zwischenpos))
             {
@@ -142,7 +213,7 @@ public class TESTTEST : MonoBehaviour
         Vector3 endPos;
         for (int height = 1; height >= -1; height--)
         {
-            for (int x = 3; x >= -3; x--)
+            /*for (int x = 3; x >= -3; x--)
             {
                 for (int z = 3; z >= -3; z--)
                 {
@@ -152,6 +223,56 @@ public class TESTTEST : MonoBehaviour
                         return endPos;
                     }
                 }
+            }*/
+            for (int x = 0; x <= 3; x++)
+            {
+                // Positive x zuerst
+                
+                    int positiveX = x;  // z.B. 1, 2, 3
+                    for (int z = 0; z <= 3; z++)
+                    {
+                        if (z != 0 || x != 0) // Vermeidet den Fall z = 0
+                        {
+                            // Positive Z
+                            endPos = new Vector3(zwischenpos.x + positiveX, zwischenpos.y + height, zwischenpos.z + z);
+                            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                            {
+                                return endPos;
+                            }
+
+                            // Negative Z nach positive Z
+                            int negativeZ = -z;
+                            endPos = new Vector3(zwischenpos.x + positiveX, zwischenpos.y + height, zwischenpos.z + negativeZ);
+                            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                            {
+                                return endPos;
+                            }
+                        }
+                    }
+
+                    // Negative x nach positive x
+                    int negativeX = -x;
+                    for (int z = 0; z <= 3; z++)
+                    {
+                        if (z != 0 || x!=0) // Vermeidet den Fall z = 0
+                        {
+                            // Positive Z
+                            endPos = new Vector3(zwischenpos.x + negativeX, zwischenpos.y + height, zwischenpos.z + z);
+                            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                            {
+                                return endPos;
+                            }
+
+                            // Negative Z nach positive Z
+                            int negativeZ = -z;
+                            endPos = new Vector3(zwischenpos.x + negativeX, zwischenpos.y + height, zwischenpos.z + negativeZ);
+                            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                            {
+                                return endPos;
+                            }
+                        }
+                    }
+                
             }
             endPos = new Vector3(zwischenpos.x - 4, zwischenpos.y + height, zwischenpos.z);
             if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
@@ -983,11 +1104,15 @@ public class TESTTEST : MonoBehaviour
     void RemoveObjectsAbove(Vector3 position)
     {
         RaycastHit hit;
+        List<Vector3> positions = new List<Vector3>();
 
         // Führe einen vertikalen Raycast nach oben durch
         while (Physics.Raycast(position, Vector3.up, out hit, Mathf.Infinity))
         {
             Debug.Log("Entferne Objekt oberhalb der Position: " + hit.collider.name);
+
+            positions.Add(hit.collider.gameObject.transform.position);
+
 
             // Entferne das getroffene Objekt
             Destroy(hit.collider.gameObject.transform.parent.gameObject); 
@@ -995,6 +1120,16 @@ public class TESTTEST : MonoBehaviour
 
             // Aktualisiere die Position, um direkt hinter dem entfernten Objekt zu starten
             position = hit.point + Vector3.up * 0.01f; // Ein kleiner Abstand, um sicherzustellen, dass du nicht immer das gleiche Objekt triffst
+        }
+
+        List<Vector3> CreatedPositions = new List<Vector3>();
+        foreach (Vector3 pos in positions)
+        {
+            if (!CreatedPositions.Contains(pos))
+            {
+                CreatedPositions.Add(pos);
+                GameObject ob = Instantiate(destroyedTile, pos, Quaternion.identity);
+            }
         }
 
         Debug.Log("Alle Objekte oberhalb der Position wurden entfernt.");
