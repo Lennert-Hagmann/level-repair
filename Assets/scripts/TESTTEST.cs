@@ -1011,13 +1011,13 @@ public class TESTTEST : MonoBehaviour
         List<Vector3> positions = new List<Vector3>();
         bool blockiert = true;
         //links und rechts wird auch gelöscht
-        //for (float x=0.5f;x>=-0.5;x=x-0.5f)
-        //{
-            for (int height = 0; height <= 2; height++)
+        for (int x=1;x>=-1;x=x-1)
+        {
+            for (int height = 0; height <= 3; height++)
             {
                 //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
-                Vector3 start = new Vector3(startpos.x, startpos.y + 1.1f + height, startpos.z);
-                Vector3 end = new Vector3(endpos.x, endpos.y + 1.1f + height, endpos.z);
+                Vector3 start = new Vector3(startpos.x+x, startpos.y + 1.1f + height, startpos.z);
+                Vector3 end = new Vector3(endpos.x+x, endpos.y + 1.1f + height, endpos.z);
 
                 // Berechne die Richtung vom Startpunkt zum Endpunkt
                 Vector3 direction = end - start;
@@ -1027,15 +1027,16 @@ public class TESTTEST : MonoBehaviour
                 // Führe den Raycast mit der Layer Mask durch
                 RaycastHit hit;
 
-                while (blockiert)
+                int safetyCounter = 100;  // Begrenze die Anzahl der Versuche
+                while (blockiert && safetyCounter > 0)
                 {
                     Debug.Log("TT");
                     if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                     {
                         Debug.Log("Weg blockiert von: " + hit.collider.name);
-                        Destroy(hit.collider.gameObject.transform.parent.gameObject);       //vorher  Destroy(hit.collider.gameObject), damit wurde nur das KindObjekt gelöscht
+                        Destroy(hit.collider.gameObject.transform.parent.gameObject);
                         Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
-                        start = hit.point + direction.normalized * 0.01f;
+                        start = hit.point + direction.normalized * 0.1f;
                         direction = end - start;
                         distance = direction.magnitude;
                         positions.Add(hit.collider.gameObject.transform.position);
@@ -1044,10 +1045,17 @@ public class TESTTEST : MonoBehaviour
                     {
                         blockiert = false;
                     }
+                    safetyCounter--;
+                }
+
+                if (safetyCounter == 0)
+                {
+                    Debug.LogError("Endlosschleife verhindert");
+                    blockiert = false;
                 }
                 blockiert = true;
             }
-        //}
+        }
         
         List<Vector3> CreatedPositions = new List<Vector3>();
         foreach(Vector3 pos in positions)
