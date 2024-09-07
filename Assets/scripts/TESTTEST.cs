@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using TMPro;
 using Unity.AI.Navigation;
 using Unity.VisualScripting;
@@ -12,6 +13,8 @@ using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Android;
 using UnityEngine.UIElements;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 public class TESTTEST : MonoBehaviour
 {
@@ -359,7 +362,7 @@ public class TESTTEST : MonoBehaviour
     private int Iteration = 1;
     public void erweiteterAgent()
     {
-        Debug.LogWarning("ERWEITERTER AGENT mit Iteration "+Iteration);
+        Debug.LogWarning("ERWEITERTER AGENT mit Iteration " + Iteration);
         reachablePositions.Add(PlayerStartPosition);
         Vector3 closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions); //NavMeshs, die nur 1 Position enthalten werden nicht berücksichtigt
         Debug.Log("Nächste Position: " + closestPos.ToString());
@@ -371,7 +374,7 @@ public class TESTTEST : MonoBehaviour
         //{
         //    Debug.Log(pos.ToString());
         //}
-        bool gefunden = false; 
+        bool gefunden = false;
         bool ZielErreichbar = false;
         //List<Vector3> newPosDurchErweitertenSprung = new List<Vector3>();
         Vector3 newPos = new Vector3();
@@ -390,11 +393,11 @@ public class TESTTEST : MonoBehaviour
                     Vector3 SprungPos = erweiteterSprung(position);
                     if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
                     {
-                        Debug.Log("Neue Position gefunden " + SprungPos.ToString() +" über Zwischenposition: " + zwischenpos.ToString());
+                        Debug.Log("Neue Position gefunden " + SprungPos.ToString() + " über Zwischenposition: " + zwischenpos.ToString());
                         reachablePositions.Add(SprungPos);
                         if (ZielErreichbar)
                         {
-                            if(SprungPos == GoalTile.transform.position)
+                            if (SprungPos == GoalTile.transform.position)
                             {
 
                                 gefunden = true;
@@ -418,9 +421,21 @@ public class TESTTEST : MonoBehaviour
                 }
 
             }
-            if(gefunden == false)
+            if (gefunden == false)
             {
                 //kein neues Objekt erreicht worden, beende Agent
+                //mach dreifachSprung
+                Vector3 Test = dreifachSprung(sortedNavMesh);
+                if (Test.x != 100 || Test.y != 100 || Test.z != 100)
+                {
+                    Debug.LogWarning("DreifachSprung erfolgreich");
+                    newPos = Test;
+                }
+                else
+                {
+                    Debug.LogWarning("DreifachSprung Nicht erfolgreich");
+                    //DreifachSprung nicht erfolgreich
+                }
                 GoalReachable = true;
                 Debug.LogWarning("kein Objekt erreicht worden durch DOPPELSPRUNG");
             }
@@ -429,7 +444,7 @@ public class TESTTEST : MonoBehaviour
         Agent(newPos);
         if (!GoalReachable)
         {
-            if(Iteration < 3)
+            if (Iteration < 3)
             {
                 Iteration++;
                 erweiteterAgent();
@@ -488,7 +503,62 @@ public class TESTTEST : MonoBehaviour
             //speicher die Karte
         }
         */
-        
+
+    }
+
+    private Vector3 Drittel(Vector3 start, Vector3 v)
+    {
+        float x = v.x / 3;
+        float y = v.y / 3;
+        float z = v.z / 3;
+        return new Vector3(start.x + x, start.y + y,start.z + z);
+    }
+    private Vector3 ZweiDrittel(Vector3 start, Vector3 v)
+    {
+        float x = v.x *(2/3);
+        float y = v.y * (2 / 3);
+        float z = v.z * (2 / 3);
+        return new Vector3(start.x + x, start.y + y, start.z + z);
+    }
+
+    private Vector3 dreifachSprung(List<Vector3> pos)
+    {
+        foreach(Vector3 v in pos)
+        {
+            Debug.LogWarning("DreifachSprung mit Vektor " + v.ToString());
+            Vector3[] Richtungen = new Vector3[]
+            {
+            new Vector3(3, 3, 3),
+            new Vector3(3, 3, -3),
+            new Vector3(-3, 3, -3),
+            new Vector3(-3, 3, 3),
+            new Vector3(3, -3, 3),
+            new Vector3(3, -3, -3),
+            new Vector3(-3, -3, -3),
+            new Vector3(-3, -3, 3)
+            };
+
+            foreach (Vector3 sprung in Richtungen)
+            {
+                Vector3 final = new Vector3(v.x + sprung.x, v.y + sprung.y, v.z + sprung.z);
+                if (IsPositionOnNavMesh(final) && !IsPositionReachableOnNavMesh(v, final))
+                {
+                    RemoveObjectsAbove(v);
+                    Vector3 temp = Drittel(v,sprung);
+                    Debug.LogWarning("HH Ist "+temp.ToString() + " ein Drittel von "+v.ToString());
+                    Vector3 temp2 = ZweiDrittel(v,sprung);
+                    Debug.LogWarning("HH Ist " + temp2.ToString() + " zwei Drittel von " + v.ToString());
+                    RemoveObjectsAbove(temp);
+                    RemoveObjectsAbove(temp2);
+                    RemoveObjectsAbove(final);
+                    CreateNavMeshLink(v, temp);
+                    CreateNavMeshLink(temp, temp2);
+                    CreateNavMeshLink(temp2, final);
+                    return final;
+                }
+            }
+        }
+        return new Vector3(100, 100, 100);
     }
 
     List<Vector3> FindNavMeshFromPos(Vector3 pos)
@@ -685,7 +755,7 @@ public class TESTTEST : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("Ziel ist für Spieler NICHT erreichbar");
+                //Debug.LogWarning("Ziel ist für Spieler NICHT erreichbar");
             }
         }
     }
@@ -1103,6 +1173,7 @@ public class TESTTEST : MonoBehaviour
 
     void RemoveObjectsAbove(Vector3 position)
     {
+        Debug.LogWarning("Remove Objects Above " + position.ToString());
         RaycastHit hit;
         List<Vector3> positions = new List<Vector3>();
 
