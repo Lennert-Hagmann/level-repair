@@ -56,12 +56,14 @@ public class PlayerFall : MonoBehaviour
         //Transform a = new Transform(initialPosition,);
         Debug.LogWarning("SpielerPosition VORHER: "+player.transform.position);
         player.SetActive(false);
-        player.transform.position = new Vector3(10,10,10);
+        player.transform.position = new Vector3(1,4,1);
         player.SetActive(true );
+        stopped = false;
         Debug.LogWarning("SpielerPosition nachHER: " + player.transform.position);
         //WorldGeneration.GetComponent<WorldGeneration>().ReloadPlayerPos();
         Time.timeScale = 1f; // Setzt das Spiel fort
-            gameOverUI.SetActive(false); // Deaktiviert das UI
+        Cursor.visible = false;
+        gameOverUI.SetActive(false); // Deaktiviert das UI
         }
 
         public void ReloadScene()

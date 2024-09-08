@@ -428,19 +428,38 @@ public class TESTTEST : MonoBehaviour
             {
                 //kein neues Objekt erreicht worden, beende Agent
                 //mach dreifachSprung
-                Vector3 Test = dreifachSprung(sortedNavMesh);
-                if (Test.x != 100 || Test.y != 100 || Test.z != 100)
+
+                foreach(Vector3 position in sortedNavMesh)
                 {
-                    Debug.LogWarning("DreifachSprung erfolgreich");
-                    newPos = Test;
+                    Vector3[] loru = new Vector3[] {
+                    new Vector3(position.x, position.y+1, position.z+1),
+                    new Vector3(position.x+1, position.y+1, position.z),
+                    new Vector3(position.x, position.y+1, position.z-1),
+                    new Vector3(position.x-1, position.y+1, position.z),
+                    };
+
+                    foreach(Vector3 p in loru) 
+                    {
+                        if (!gefunden)
+                        {
+                            Vector3 SprungPos = erweiteterSprung(p);
+                            if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
+                            {
+                                AllTiles.Add(Instantiate(newTile, p, Quaternion.identity));
+                                ErweitertCreateNavMeshLink(p, SprungPos, zwischenpos);
+                                gefunden = true;
+                                Debug.LogWarning("Dreifachsprung " +zwischenpos.ToString());
+                            }
+                        }
+                        
+                    }
+
+                    
                 }
-                else
-                {
-                    Debug.LogWarning("DreifachSprung Nicht erfolgreich");
-                    //DreifachSprung nicht erfolgreich
-                }
-                GoalReachable = true;
-                Debug.LogWarning("kein Objekt erreicht worden durch DOPPELSPRUNG");
+            }
+            if(gefunden == false)
+            {
+                Debug.LogWarning("Kein Dreifachsprung");
             }
 
         }
@@ -455,6 +474,24 @@ public class TESTTEST : MonoBehaviour
             
         }
 
+    }
+
+    private Vector3 erweiteterSprungOhneA(Vector3 p, Vector3 a)
+    {
+        bool korrekt = false;
+        Vector3 t = new Vector3();
+        /*
+        while (!korrekt)
+        {
+            t = erweiteterSprung(p);
+            if (t.x == a.x && t.z == a.z || t.x == zwischenpos.x && t.z == zwischenpos.z)
+            {
+                korrekt = true;
+            }
+        }
+        */
+        return t;
+        
     }
 
     private Vector3 Drittel(Vector3 start, Vector3 v)
@@ -1176,14 +1213,62 @@ public class TESTTEST : MonoBehaviour
         
         List<Vector3> positions = new List<Vector3>();
         bool blockiert = true;
-        //links und rechts wird auch gelöscht
-        for (int x=1;x>=-1;x=x-1)
+        if(startpos.x !=  endpos.x && startpos.z != endpos.z) 
+        {
+            //links und rechts wird auch gelöscht
+            for (int x = 1; x >= -1; x = x - 1)
+            {
+                for (int height = 0; height <= 3; height++)
+                {
+                    //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
+                    Vector3 start = new Vector3(startpos.x + x, startpos.y + 1.1f + height, startpos.z);
+                    Vector3 end = new Vector3(endpos.x + x, endpos.y + 1.1f + height, endpos.z);
+
+                    // Berechne die Richtung vom Startpunkt zum Endpunkt
+                    Vector3 direction = end - start;
+
+                    // Berechne die Distanz zwischen den beiden Punkten
+                    float distance = direction.magnitude;
+                    // Führe den Raycast mit der Layer Mask durch
+                    RaycastHit hit;
+
+                    int safetyCounter = 100;  // Begrenze die Anzahl der Versuche
+                    while (blockiert && safetyCounter > 0)
+                    {
+                        Debug.Log("TT");
+                        if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
+                        {
+                            Debug.Log("Weg blockiert von: " + hit.collider.name);
+                            Destroy(hit.collider.gameObject.transform.parent.gameObject);
+                            Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                            start = hit.point + direction.normalized * 0.1f;
+                            direction = end - start;
+                            distance = direction.magnitude;
+                            positions.Add(hit.collider.gameObject.transform.position);
+                        }
+                        else
+                        {
+                            blockiert = false;
+                        }
+                        safetyCounter--;
+                    }
+
+                    if (safetyCounter == 0)
+                    {
+                        Debug.LogError("Endlosschleife verhindert");
+                        blockiert = false;
+                    }
+                    blockiert = true;
+                }
+            }
+        }
+        else
         {
             for (int height = 0; height <= 3; height++)
             {
                 //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
-                Vector3 start = new Vector3(startpos.x+x, startpos.y + 1.1f + height, startpos.z);
-                Vector3 end = new Vector3(endpos.x+x, endpos.y + 1.1f + height, endpos.z);
+                Vector3 start = new Vector3(startpos.x, startpos.y + 1.1f + height, startpos.z);
+                Vector3 end = new Vector3(endpos.x, endpos.y + 1.1f + height, endpos.z);
 
                 // Berechne die Richtung vom Startpunkt zum Endpunkt
                 Vector3 direction = end - start;
@@ -1222,6 +1307,7 @@ public class TESTTEST : MonoBehaviour
                 blockiert = true;
             }
         }
+        
         
         List<Vector3> CreatedPositions = new List<Vector3>();
         foreach(Vector3 pos in positions)
