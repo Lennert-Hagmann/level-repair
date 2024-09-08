@@ -55,7 +55,9 @@ public class PlayerFall : MonoBehaviour
         //cube.transform.position = initialPosition; // Setzt den Spieler an die Startposition zurück
         //Transform a = new Transform(initialPosition,);
         Debug.LogWarning("SpielerPosition VORHER: "+player.transform.position);
-        player.transform.position = initialPosition;
+        player.SetActive(false);
+        player.transform.position = new Vector3(10,10,10);
+        player.SetActive(true );
         Debug.LogWarning("SpielerPosition nachHER: " + player.transform.position);
         //WorldGeneration.GetComponent<WorldGeneration>().ReloadPlayerPos();
         Time.timeScale = 1f; // Setzt das Spiel fort

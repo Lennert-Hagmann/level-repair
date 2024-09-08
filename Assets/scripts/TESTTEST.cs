@@ -22,7 +22,7 @@ public class TESTTEST : MonoBehaviour
     public NavMeshSurface surface;
     public GameObject player;
     public Vector3 PlayerStartPosition;
-    public GameObject GoalTile;
+    public GameObject GoalTile; 
     private void Start()
     {
 
@@ -362,6 +362,9 @@ public class TESTTEST : MonoBehaviour
     private int Iteration = 1;
     public void erweiteterAgent()
     {
+
+        ColorChangeFarbe = Colors.First();
+        Colors.Remove(Colors.First());
         Debug.LogWarning("ERWEITERTER AGENT mit Iteration " + Iteration);
         reachablePositions.Add(PlayerStartPosition);
         Vector3 closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions); //NavMeshs, die nur 1 Position enthalten werden nicht berücksichtigt
@@ -444,65 +447,13 @@ public class TESTTEST : MonoBehaviour
         Agent(newPos);
         if (!GoalReachable)
         {
-            if (Iteration < 3)
+            if (Iteration < 4)
             {
                 Iteration++;
                 erweiteterAgent();
             }
-            //erweiteterAgent();
+            
         }
-        /*
-        List<Vector3> newPositions = new List<Vector3>();
-        //foreach (Vector3 pos in newPosDurchErweitertenSprung)
-        //{
-        Vector3 pos = newPos;
-            Debug.Log("Untersuche " + pos.ToString());
-            List<Vector3> list = durchquereNavMeshGebiet(pos);
-            if (!GoalReachable)
-            {
-                foreach (Vector3 position in list)
-                {
-                    for (int height = -1; height <= 1; height++)
-                    {
-                        CreateNavMeshLink2(position, new Vector3(position.x - 4, position.y + height, position.z), newPositions);
-                        CreateNavMeshLink2(position, new Vector3(position.x + 4, position.y + height, position.z), newPositions);
-                        CreateNavMeshLink2(position, new Vector3(position.x, position.y + height, position.z + 4), newPositions);
-                        CreateNavMeshLink2(position, new Vector3(position.x, position.y + height, position.z - 4), newPositions);
-                        for (int x = -3; x <= 3; x++)
-                        {
-                            for (int z = -3; z <= 3; z++)
-                            {
-                                if ((((x == -1 && z == 0) || (x == 0 && z == -1) || (x == 0 && z == 0) || (x == 0 && z == 1) || (x == 1 && z == 0)) && height == 0) || (x == 0 && z == 0 && height == 0))
-                                {
-                                    //do nothing
-                                }
-                                else
-                                {
-                                    CreateNavMeshLink2(position, new Vector3(position.x + x, position.y + height, position.z + z), newPositions);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (!GoalReachable)
-            {
-                foreach (Vector3 p in newPositions)
-                {
-                    durchquereNavMeshGebiet(p);
-                }
-            }
-        //}
-        if (!GoalReachable)
-        {
-            surface.BuildNavMesh();
-            erweiteterAgent();
-        }
-        else
-        {
-            //speicher die Karte
-        }
-        */
 
     }
 
@@ -764,6 +715,7 @@ public class TESTTEST : MonoBehaviour
 
     public static bool ColorChange;
     public Color ColorChangeFarbe;
+    public  List<Color> Colors;
     public bool markOnlyNewPositions;
     public List<Vector3> ColorChangedPositions;
     public List<Vector3> GoalPositions;
@@ -771,6 +723,13 @@ public class TESTTEST : MonoBehaviour
 
     public bool GoalReachable = false;
 
+    public void StartAgent(Vector3 pos)
+    {
+
+        ColorChangeFarbe = Colors.First();
+        Colors.Remove(Colors.First());
+        Agent(pos);
+    }
 
     //färbt alle Position in der Liste mit der übergebenen Farbe
     void changeColor(List<Vector3> positions)
@@ -948,6 +907,7 @@ public class TESTTEST : MonoBehaviour
     List<Vector3> l = new List<Vector3>();
     public void Agent(Vector3 startPosition)
     {
+
         Debug.Log("AA aus TEST");
         if (!GoalReachable)
         {

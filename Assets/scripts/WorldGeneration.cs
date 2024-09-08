@@ -76,6 +76,8 @@ public class WorldGeneration : MonoBehaviour
     public static bool erweitert;
     public GameObject playerFallScript;
 
+    public List<Color> mapColor = new List<Color>();
+
     private void Start()
     {
         Debug.LogWarning(difficulty.Difficulty.ToString());
@@ -93,13 +95,15 @@ public class WorldGeneration : MonoBehaviour
         Vector3 startPosition = new Vector3(1, 3,1);
         //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
+        mapColor.Add(Color.grey); mapColor.Add(Color.black); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow);
+        NavMeshLinkScript.GetComponent<TESTTEST>().Colors = mapColor;
         Debug.LogWarning("Start Position: " + startPosition.ToString());
         playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;
         NavMeshLinkScript.GetComponent<TESTTEST>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
-        NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
-        NavMeshLinkScript.GetComponent<TESTTEST>().destroyedTile = destroyed_tile;
-        NavMeshLinkScript.GetComponent<TESTTEST>().Agent(startPosition);
+        //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
+        NavMeshLinkScript.GetComponent<TESTTEST>().destroyedTile = destroyed_tile; 
+        NavMeshLinkScript.GetComponent<TESTTEST>().StartAgent(startPosition);
 
 
 
@@ -107,7 +111,7 @@ public class WorldGeneration : MonoBehaviour
         {
 
         NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
-        NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
+        //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
         NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
         }
 
