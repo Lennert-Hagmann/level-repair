@@ -95,7 +95,7 @@ public class WorldGeneration : MonoBehaviour
         Vector3 startPosition = new Vector3(1, 3,1);
         //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
-        mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey);
+        mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey); mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey);
         NavMeshLinkScript.GetComponent<TESTTEST>().Colors = mapColor;
         Debug.LogWarning("Start Position: " + startPosition.ToString());
         playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;

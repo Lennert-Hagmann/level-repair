@@ -358,7 +358,7 @@ public class TESTTEST : MonoBehaviour
         return Vector3.zero;
     }
 
-
+    private List<Vector3> untersuchtePos = new List<Vector3>();
     private int Iteration = 1;
     public void erweiteterAgent()
     {
@@ -368,6 +368,7 @@ public class TESTTEST : MonoBehaviour
         Debug.LogWarning("ERWEITERTER AGENT mit Iteration " + Iteration);
         reachablePositions.Add(PlayerStartPosition);
         Vector3 closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions); //NavMeshs, die nur 1 Position enthalten werden nicht berücksichtigt
+        checkIfGoalIsReachable(closestPos);
         Debug.Log("Nächste Position: " + closestPos.ToString());
 
 
@@ -442,13 +443,25 @@ public class TESTTEST : MonoBehaviour
                     {
                         if (!gefunden)
                         {
-                            Vector3 SprungPos = erweiteterSprung(p);
+                            Vector3 SprungPos = erweiteterSprung3(p, position);
                             if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
                             {
                                 AllTiles.Add(Instantiate(newTile, p, Quaternion.identity));
+                                AllTiles.Add(Instantiate(newTile, position, Quaternion.identity));
+                                RemoveObjectsAbove(p);
                                 ErweitertCreateNavMeshLink(p, SprungPos, zwischenpos);
                                 gefunden = true;
                                 Debug.LogWarning("Dreifachsprung " +zwischenpos.ToString());
+                                reachablePositions.Add(SprungPos);
+                                surface.BuildNavMesh();
+
+                                List<Vector3> n = new List<Vector3>();
+                                n.Add(zwischenpos);
+                                ListOfNavMeshs.Add(n);
+                                List<Vector3> na = new List<Vector3>();
+                                na.Add(SprungPos);
+                                ListOfNavMeshs.Add(na);
+
                             }
                         }
                         
@@ -463,17 +476,245 @@ public class TESTTEST : MonoBehaviour
             }
 
         }
-        Agent(newPos);
         if (!GoalReachable)
         {
-            if (Iteration < 4)
+            Agent(newPos);
+
+        }
+        if (!GoalReachable)
+        {
+            if (Iteration < 6)
             {
                 Iteration++;
+                surface.BuildNavMesh();
                 erweiteterAgent();
             }
             
         }
 
+    }
+
+    //gibt true zrück, wenn sich keine der Vektoren übereinander befinden
+    private bool NichtÜbereinander(Vector3 a, Vector3 b, Vector3 c)
+    {
+        if (a.x == b.x && a.z == b.z) { Debug.LogWarning("Übereinander " + a.ToString() + b.ToString()); return false; }
+        if(a.x == c.x && a.z == c.z) { Debug.LogWarning("Übereinander " + a.ToString() + c.ToString()); return false; }
+        if (b.x == c.x && b.z == c.z) { Debug.LogWarning("Übereinander " + b.ToString() + c.ToString()); return false; }
+        Debug.LogWarning("Nicht Übereinander " + a.ToString() +b.ToString() + c.ToString()); return true;
+    }
+    Vector3 erweiteterSprung23(Vector3 zwischenpos, Vector3 startPos, Vector3 ursprünglicherStart)
+    {
+        Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString());
+        Vector3 endPos;
+        for (int height = 1; height >= -1; height--)
+        {
+            /*for (int x = 3; x >= -3; x--)
+            {
+                for (int z = 3; z >= -3; z--)
+                {
+                    endPos = new Vector3(zwischenpos.x + x, zwischenpos.y + height, zwischenpos.z + z);
+                    if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(startPos, endPos))
+                    {
+                        return endPos;
+                    }
+                }
+            }*/
+            for (int x = 0; x <= 3; x++)
+            {
+                // Positive x zuerst
+
+                int positiveX = x;  // z.B. 1, 2, 3
+                for (int z = 0; z <= 3; z++)
+                {
+                    if (z != 0 || x != 0) // Vermeidet den Fall z = 0
+                    {
+                        // Positive Z
+                        endPos = new Vector3(zwischenpos.x + positiveX, zwischenpos.y + height, zwischenpos.z + z);
+                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos,zwischenpos,ursprünglicherStart))
+                        {
+                            return endPos;
+                        }
+
+                        // Negative Z nach positive Z
+                        int negativeZ = -z;
+                        endPos = new Vector3(zwischenpos.x + positiveX, zwischenpos.y + height, zwischenpos.z + negativeZ);
+                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+                        {
+                            return endPos;
+                        }
+                    }
+                }
+
+                // Negative x nach positive x
+                int negativeX = -x;
+                for (int z = 0; z <= 3; z++)
+                {
+                    if (z != 0 || x != 0) // Vermeidet den Fall z = 0
+                    {
+                        // Positive Z
+                        endPos = new Vector3(zwischenpos.x + negativeX, zwischenpos.y + height, zwischenpos.z + z);
+                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+                        {
+                            return endPos;
+                        }
+
+                        // Negative Z nach positive Z
+                        int negativeZ = -z;
+                        endPos = new Vector3(zwischenpos.x + negativeX, zwischenpos.y + height, zwischenpos.z + negativeZ);
+                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+                        {
+                            return endPos;
+                        }
+                    }
+                }
+
+            }
+            endPos = new Vector3(zwischenpos.x - 4, zwischenpos.y + height, zwischenpos.z);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+            {
+                return endPos;
+            }
+            endPos = new Vector3(zwischenpos.x + 4, zwischenpos.y + height, zwischenpos.z);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+            {
+                return endPos;
+            }
+            endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z + 4);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+            {
+                return endPos;
+            }
+            endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z - 4);
+            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+            {
+                return endPos;
+            }
+        }
+        return new Vector3(100, 100, 100);
+    }
+
+
+
+    Vector3 erweiteterSprung3(Vector3 p, Vector3 start)
+    {
+
+        if (Vector3.Distance(p, GoalTile.transform.position) < 3)
+            Debug.Log("erweiteter Sprung mit Startposition " + p.ToString());
+        Vector3 finalPosition = new Vector3(100, 100, 100);
+        Vector3 Test = new Vector3(100, 100, 100);
+        for (int height = 1; height >= 1; height--)
+        {
+            
+            for (int x = 0; x <= 3; x++)
+            {
+                // Positive x zuerst
+
+                int positiveX = x;  // z.B. 1, 2, 3
+                for (int z = 0; z <= 3; z++)
+                {
+                    // Positive Z zuerst
+                    if (z != 0 || x != 0) // Vermeidet den Fall z = 0
+                    {
+                        zwischenpos = new Vector3(p.x + x, p.y + height, p.z + z);
+                        if (IstImSpielBereich(zwischenpos))
+                        {
+                            finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                            if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                            {
+                                return finalPosition;
+                            }
+                        }
+                        // Negative Z nach positive z
+                        int negativeZ = -z;
+                        zwischenpos = new Vector3(p.x + x, p.y + height, p.z + negativeZ);
+                        if (IstImSpielBereich(zwischenpos))
+                        {
+                            finalPosition = erweiteterSprung23(zwischenpos, p,start);
+                            if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                            {
+                                return finalPosition;
+                            }
+                        }
+                    }
+
+
+                }
+                // Negative x nach positive x
+                int negativeX = -x;  // z.B. -1, -2, -3
+                for (int z = 0; z <= 3; z++)
+                {
+                    // Positive Z zuerst
+                    if (z != 0 || x != 0) // Vermeidet den Fall i = 0
+                    {
+                        zwischenpos = new Vector3(p.x + negativeX, p.y + height, p.z + z);
+                        if (IstImSpielBereich(zwischenpos))
+                        {
+                            finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                            if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                            {
+                                return finalPosition;
+                            }
+                        }
+                        // Negative Z nach positive z
+                        int negativeZ = -z;
+                        zwischenpos = new Vector3(p.x + x, p.y + height, p.z + negativeZ);
+                        if (IstImSpielBereich(zwischenpos))
+                        {
+                            finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                            if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                            {
+                                return finalPosition;
+                            }
+                        }
+                    }
+
+
+                }
+
+            }
+
+            //Schleifenende
+
+
+            zwischenpos = new Vector3(p.x - 4, p.y + height, p.z);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+            zwischenpos = new Vector3(p.x + 4, p.y + height, p.z);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+            zwischenpos = new Vector3(p.x, p.y + height, p.z + 4);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+            zwischenpos = new Vector3(p.x, p.y + height, p.z - 4);
+            if (IstImSpielBereich(zwischenpos))
+            {
+                finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                {
+                    return finalPosition;
+                }
+            }
+        }
+        Debug.LogWarning("kein erweiterter Sprung gefunden");
+        return Test;
     }
 
     private Vector3 erweiteterSprungOhneA(Vector3 p, Vector3 a)
@@ -573,12 +814,14 @@ public class TESTTEST : MonoBehaviour
 
             // Wenn dieser Abstand kleiner ist als der bisher kleinste Abstand,
             // speichere diese Position und den neuen kleinsten Abstand
-            if (distance < smallestDistance)
+            if (distance < smallestDistance && !untersuchtePos.Contains(position))
             {
                 smallestDistance = distance;
                 closestPosition = position;
             }
         }
+
+        untersuchtePos.Add(closestPosition);
 
         // Gib die nächste Position zurück
         return closestPosition;
@@ -1216,7 +1459,7 @@ public class TESTTEST : MonoBehaviour
         if(startpos.x !=  endpos.x && startpos.z != endpos.z) 
         {
             //links und rechts wird auch gelöscht
-            for (int x = 1; x >= -1; x = x - 1)
+            for (float x = 0.5f; x >= -0.5f; x = x - 0.5f)
             {
                 for (int height = 0; height <= 3; height++)
                 {
@@ -1239,12 +1482,16 @@ public class TESTTEST : MonoBehaviour
                         if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                         {
                             Debug.Log("Weg blockiert von: " + hit.collider.name);
-                            Destroy(hit.collider.gameObject.transform.parent.gameObject);
-                            Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
-                            start = hit.point + direction.normalized * 0.1f;
-                            direction = end - start;
-                            distance = direction.magnitude;
-                            positions.Add(hit.collider.gameObject.transform.position);
+                            if (hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject == null || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
+                            else
+                            {
+                                Destroy(hit.collider.gameObject.transform.parent.gameObject);
+                                Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                                start = hit.point + direction.normalized * 0.1f;
+                                direction = end - start;
+                                distance = direction.magnitude;
+                                positions.Add(hit.collider.gameObject.transform.position);
+                            }
                         }
                         else
                         {
@@ -1278,19 +1525,22 @@ public class TESTTEST : MonoBehaviour
                 // Führe den Raycast mit der Layer Mask durch
                 RaycastHit hit;
 
-                int safetyCounter = 100;  // Begrenze die Anzahl der Versuche
+                int safetyCounter = 50;  // Begrenze die Anzahl der Versuche
                 while (blockiert && safetyCounter > 0)
                 {
                     Debug.Log("TT");
                     if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                     {
                         Debug.Log("Weg blockiert von: " + hit.collider.name);
-                        Destroy(hit.collider.gameObject.transform.parent.gameObject);
-                        Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
-                        start = hit.point + direction.normalized * 0.1f;
-                        direction = end - start;
-                        distance = direction.magnitude;
-                        positions.Add(hit.collider.gameObject.transform.position);
+                        if (hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject==null || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
+                        else{
+                            Destroy(hit.collider.gameObject.transform.parent.gameObject);
+                            Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                            start = hit.point + direction.normalized * 0.1f;
+                            direction = end - start;
+                            distance = direction.magnitude;
+                            positions.Add(hit.collider.gameObject.transform.position);
+                        }
                     }
                     else
                     {
