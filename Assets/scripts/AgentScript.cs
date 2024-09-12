@@ -407,7 +407,7 @@ public class AgentScript : MonoBehaviour
                     {
                         // Positive Z
                         endPos = new Vector3(zwischenpos.x + positiveX, zwischenpos.y + height, zwischenpos.z + z);
-                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos,zwischenpos,ursprünglicherStart))
+                        if (IsValidPosition(endPos, ursprünglicherStart, zwischenpos))
                         {
                             return endPos;
                         }
@@ -415,7 +415,7 @@ public class AgentScript : MonoBehaviour
                         // Negative Z nach positive Z
                         int negativeZ = -z;
                         endPos = new Vector3(zwischenpos.x + positiveX, zwischenpos.y + height, zwischenpos.z + negativeZ);
-                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+                        if (IsValidPosition(endPos, ursprünglicherStart, zwischenpos))
                         {
                             return endPos;
                         }
@@ -430,7 +430,7 @@ public class AgentScript : MonoBehaviour
                     {
                         // Positive Z
                         endPos = new Vector3(zwischenpos.x + negativeX, zwischenpos.y + height, zwischenpos.z + z);
-                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+                        if (IsValidPosition(endPos, ursprünglicherStart, zwischenpos))
                         {
                             return endPos;
                         }
@@ -438,7 +438,7 @@ public class AgentScript : MonoBehaviour
                         // Negative Z nach positive Z
                         int negativeZ = -z;
                         endPos = new Vector3(zwischenpos.x + negativeX, zwischenpos.y + height, zwischenpos.z + negativeZ);
-                        if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+                        if (IsValidPosition(endPos, ursprünglicherStart, zwischenpos))
                         {
                             return endPos;
                         }
@@ -446,28 +446,29 @@ public class AgentScript : MonoBehaviour
                 }
 
             }
-            endPos = new Vector3(zwischenpos.x - 4, zwischenpos.y + height, zwischenpos.z);
-            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
+            // Direkte Tests für größere Sprünge (X, Z = ±4)
+            Vector3[] directions = new Vector3[] {
+            new Vector3(4, 0, 0), new Vector3(-4, 0, 0),
+            new Vector3(0, 0, 4), new Vector3(0, 0, -4)
+        };
+
+            foreach (var dir in directions)
             {
-                return endPos;
-            }
-            endPos = new Vector3(zwischenpos.x + 4, zwischenpos.y + height, zwischenpos.z);
-            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
-            {
-                return endPos;
-            }
-            endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z + 4);
-            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
-            {
-                return endPos;
-            }
-            endPos = new Vector3(zwischenpos.x, zwischenpos.y + height, zwischenpos.z - 4);
-            if (IsPositionOnNavMesh(endPos) && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos) && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart))
-            {
-                return endPos;
+                endPos = zwischenpos + new Vector3(dir.x, height, dir.z);
+                if (IsValidPosition(endPos, ursprünglicherStart, zwischenpos))
+                {
+                    return endPos;
+                }
             }
         }
         return new Vector3(100, 100, 100);
+    }
+
+    bool IsValidPosition(Vector3 endPos, Vector3 ursprünglicherStart, Vector3 zwischenpos)
+    {
+        return IsPositionOnNavMesh(endPos)
+            && !IsPositionReachableOnNavMesh(ursprünglicherStart, endPos)
+            && NichtÜbereinander(endPos, zwischenpos, ursprünglicherStart);
     }
 
 
@@ -548,41 +549,21 @@ public class AgentScript : MonoBehaviour
 
             }
 
+            Vector3[] directions = new Vector3[] {
+            new Vector3(4, 0, 0), new Vector3(-4, 0, 0),
+            new Vector3(0, 0, 4), new Vector3(0, 0, -4)
+            };
 
-            zwischenpos = new Vector3(p.x - 4, p.y + height, p.z);
-            if (IstImSpielBereich(zwischenpos))
+            foreach (var dir in directions)
             {
-                finalPosition = erweiteterSprung23(zwischenpos, p, start);
-                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
+                Vector3 zwischenpos = p + new Vector3(dir.x, height, dir.z);
+                if (IstImSpielBereich(zwischenpos))
                 {
-                    return finalPosition;
-                }
-            }
-            zwischenpos = new Vector3(p.x + 4, p.y + height, p.z);
-            if (IstImSpielBereich(zwischenpos))
-            {
-                finalPosition = erweiteterSprung23(zwischenpos, p, start);
-                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
-                {
-                    return finalPosition;
-                }
-            }
-            zwischenpos = new Vector3(p.x, p.y + height, p.z + 4);
-            if (IstImSpielBereich(zwischenpos))
-            {
-                finalPosition = erweiteterSprung23(zwischenpos, p, start);
-                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
-                {
-                    return finalPosition;
-                }
-            }
-            zwischenpos = new Vector3(p.x, p.y + height, p.z - 4);
-            if (IstImSpielBereich(zwischenpos))
-            {
-                finalPosition = erweiteterSprung23(zwischenpos, p, start);
-                if (finalPosition.x != Test.x || finalPosition.y != Test.y || finalPosition.z != Test.z)
-                {
-                    return finalPosition;
+                    finalPosition = erweiteterSprung23(zwischenpos, p, start);
+                    if (!finalPosition.Equals(new Vector3(100, 100, 100)))
+                    {
+                        return finalPosition;
+                    }
                 }
             }
         }
@@ -1201,7 +1182,7 @@ public class AgentScript : MonoBehaviour
                         if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                         {
                             Debug.Log("Weg blockiert von: " + hit.collider.name);
-                            if (hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject == null || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
+                            if (hit.collider.gameObject == destroyedTile || hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject.transform == GoalTile.transform || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
                             else
                             {
                                 Destroy(hit.collider.gameObject.transform.parent.gameObject);

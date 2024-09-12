@@ -10,6 +10,8 @@ using Unity.AI.Navigation;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Net.Security;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class WorldGeneration : MonoBehaviour
 {
@@ -110,22 +112,25 @@ public class WorldGeneration : MonoBehaviour
         if(NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert)
         {
 
-        //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-        NavMeshLinkScript.GetComponent<AgentScript>().erweiteterAgent();
+            //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
+            
+            
+            Stopwatch stopwatch = new Stopwatch();
+
+            // Starte die Zeitmessung
+            stopwatch.Start();
+
+            // Der Code, dessen Ausführungszeit du messen möchtest
+            NavMeshLinkScript.GetComponent<AgentScript>().erweiteterAgent();
+
+            // Stoppe die Zeitmessung
+            stopwatch.Stop();
+
+            // Ausgabe der gemessenen Zeit in Millisekunden
+            UnityEngine.Debug.Log("Ausführungszeit: " + stopwatch.Elapsed + " ms");
         }
 
     }
-
-    
-
-
-
-    public float maxVerticalDistance = 1.0f;
-    public float maxHorizontalDistance = 3.0f;
-    public float edgeDetectionRadius = 0.5f;
-
-
-    
 
     //erstelle ein 2 dimensionales Array (Map) von Position Points
     private void createMap(List<int> values, int testlength, int startHöhe, int zielHöhe)
@@ -260,7 +265,7 @@ public class WorldGeneration : MonoBehaviour
         }
         else if (diff == 2)
         {
-            diamond_square(33, 0, 12, -2, 2,3,12); createTiles(5, 8, 9);
+            diamond_square(65, 0, 12, -2, 2,3,10); createTiles(4, 6, 8);
         }
     }
 
