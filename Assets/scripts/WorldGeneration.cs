@@ -256,16 +256,16 @@ public class WorldGeneration : MonoBehaviour
     {
         if(diff == 0)
         {
-            diamond_square(33, 0, 8, 0, 1,3,8); createTiles(5,5,5);
+            diamond_square(17, 0, 8, 0, 1,3,7); createTiles(5,5,5);
         }
         else if(diff == 1)
         {
 
-            diamond_square(33, 0, 12, -1, 2,3,10); createTiles(5,8,8);
+            diamond_square(17, 0, 12, -1, 2,3,10); createTiles(5,8,8);
         }
         else if (diff == 2)
         {
-            diamond_square(65, 0, 12, -2, 2,3,10); createTiles(4, 6, 8);
+            diamond_square(33, 0, 12, -2, 2,3,10); createTiles(4, 6, 8);
         }
     }
 
