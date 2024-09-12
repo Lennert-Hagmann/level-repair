@@ -25,8 +25,8 @@ public class MainMenuScript : MonoBehaviour
 
     public void ToggleClickColor()
     {
-        TESTTEST.ColorChange = ColorToggle.isOn;
-        Debug.Log("Color Change ist: " + TESTTEST.ColorChange.ToString());
+        AgentScript.ColorChange = ColorToggle.isOn;
+        Debug.Log("Color Change ist: " + AgentScript.ColorChange.ToString());
     }
 
     public void StartGame()

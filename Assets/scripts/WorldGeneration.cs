@@ -83,7 +83,7 @@ public class WorldGeneration : MonoBehaviour
         Debug.LogWarning(difficulty.Difficulty.ToString());
         Time.timeScale = 1f;
         gameWinUI.SetActive(false);
-        NavMeshLinkScript.GetComponent<TESTTEST>().newTile = new_tile;
+        NavMeshLinkScript.GetComponent<AgentScript>().newTile = new_tile;
         erstelleWelt(difficulty.Difficulty);
 
         //NavMeshLinkScript.GetComponent<TESTTEST>().deleteObjectsBetween(new Vector3 (4,0,0), new Vector3(4, 0, 10));
@@ -94,50 +94,29 @@ public class WorldGeneration : MonoBehaviour
         //Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
         Vector3 startPosition = new Vector3(1, 3,1);
         //Debug.LogWarning(startPosition);
-        NavMeshLinkScript.GetComponent<TESTTEST>().PlayerStartPosition = startPosition;
+        NavMeshLinkScript.GetComponent<AgentScript>().PlayerStartPosition = startPosition;
         mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey); mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey);
-        NavMeshLinkScript.GetComponent<TESTTEST>().Colors = mapColor;
+        NavMeshLinkScript.GetComponent<AgentScript>().Colors = mapColor;
         Debug.LogWarning("Start Position: " + startPosition.ToString());
         playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;
-        NavMeshLinkScript.GetComponent<TESTTEST>().GoalTile = Last;
+        NavMeshLinkScript.GetComponent<AgentScript>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
         //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
-        NavMeshLinkScript.GetComponent<TESTTEST>().destroyedTile = destroyed_tile; 
-        NavMeshLinkScript.GetComponent<TESTTEST>().StartAgent(startPosition);
+        NavMeshLinkScript.GetComponent<AgentScript>().destroyedTile = destroyed_tile; 
+        NavMeshLinkScript.GetComponent<AgentScript>().StartAgent(startPosition);
 
 
 
-        if(NavMeshLinkScript.GetComponent<TESTTEST>().GoalReachable == false && erweitert)
+        if(NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert)
         {
 
-        NavMeshLinkScript.GetComponent<TESTTEST>().tile = tile;
         //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-        NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
+        NavMeshLinkScript.GetComponent<AgentScript>().erweiteterAgent();
         }
 
     }
 
-    void checkGoalReachable(Vector3 start)
-    {
-        NavMeshPath path = new NavMeshPath();
-        if (NavMesh.CalculatePath(start, Last.transform.position, NavMesh.AllAreas, path))
-        {
-            // Überprüft, ob der berechnete Pfad vollständig ist
-            if (path.status == NavMeshPathStatus.PathComplete)
-            {
-                //Ziel ist für Spieler erreichbar
-                Debug.Log("Ziel ist für Spieler erreichbar");
-            }
-            else
-            {
-                //Ziel ist für Spieler NICHT erreichbar
-
-                Debug.Log("Ziel ist für Spieler NICHT erreichbar");
-                //erweiterter Agent
-                NavMeshLinkScript.GetComponent<TESTTEST>().erweiteterAgent();
-            }
-        }
-    }
+    
 
 
 
@@ -146,128 +125,7 @@ public class WorldGeneration : MonoBehaviour
     public float edgeDetectionRadius = 0.5f;
 
 
-    void BEtaGenerateNavMeshLinks(Vector3 startPosition)
-    {
-        // Stelle sicher, dass das NavMesh auf dem NavMeshSurface erstellt wurde
-        surface.BuildNavMesh();
-
-        // Liste der Positionen im gleichen NavMesh-Bereich wie die Startposition
-        List<Vector3> sameMeshPositions = new List<Vector3>();
-
-        // Warteschlange für Positionen, die untersucht werden müssen
-        Queue<Vector3> positionsToCheck = new Queue<Vector3>();
-        positionsToCheck.Enqueue(startPosition);
-        sameMeshPositions.Add(startPosition);
-
-        while (positionsToCheck.Count > 0)
-        {
-            // Nimm die nächste Position aus der Warteschlange
-            Vector3 currentPosition = positionsToCheck.Dequeue();
-
-            // Finde benachbarte Positionen auf den Kanten des aktuellen Bereichs
-            Vector3[] possiblePositions = new Vector3[]
-            {
-                currentPosition + new Vector3(1, 0, 0), // rechts
-                currentPosition + new Vector3(-1, 0, 0), // links
-                currentPosition + new Vector3(0, 0, 1), // vorwärts
-                currentPosition + new Vector3(0, 0, -1), // rückwärts
-                //oben
-                currentPosition + new Vector3(1, 1, 0), // rechts
-                currentPosition + new Vector3(-1, 1, 0), // links
-                currentPosition + new Vector3(0, 1, 1), // vorwärts
-                currentPosition + new Vector3(0, 1, -1), // rückwärts
-                //unten
-                currentPosition + new Vector3(1, -1, 0), // rechts
-                currentPosition + new Vector3(-1, -1, 0), // links
-                currentPosition + new Vector3(0, -1, 1), // vorwärts
-                currentPosition + new Vector3(0, -1, -1), // rückwärts
-            };
-
-            foreach (Vector3 possiblePosition in possiblePositions)
-            {
-                if (IsPositionOnNavMesh(possiblePosition))
-                {
-                    // Prüfe, ob die Position auf dem gleichen NavMeshSurface liegt
-                    if (IsPositionOnSameMesh(possiblePosition, startPosition))
-                    {
-                        if (!sameMeshPositions.Contains(possiblePosition))
-                        {
-                            sameMeshPositions.Add(possiblePosition);
-                            positionsToCheck.Enqueue(possiblePosition);
-                        }
-                    }
-                    else
-                    {
-                        // Finde erreichbare Positionen in einem anderen NavMesh-Bereich
-                        if (IsPositionReachable(currentPosition, possiblePosition))
-                        {
-                            // Erstelle einen NavMeshLink zwischen den beiden Bereichen
-                            CreateNavMeshLink(currentPosition, possiblePosition);
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-
-    bool IsPositionOnNavMesh(Vector3 position)
-    {
-        NavMeshHit hit;
-        // Versuche, die Position auf dem NavMesh zu finden, innerhalb eines Radius von maxDistance
-        if (NavMesh.SamplePosition(position, out hit, 1.0f, NavMesh.AllAreas))
-        {
-            // Wenn ein Punkt gefunden wurde, liegt die Position innerhalb der NavMeshSurface
-            //Debug.Log("NAVMESH");
-            return true;
-        }
-        return false;
-    }
-
-    bool IsPositionOnSameMesh(Vector3 position, Vector3 referencePosition)
-    {
-        NavMeshHit hit;
-        NavMesh.SamplePosition(position, out hit, edgeDetectionRadius, NavMesh.AllAreas);
-        NavMesh.SamplePosition(referencePosition, out NavMeshHit referenceHit, edgeDetectionRadius, NavMesh.AllAreas);
-
-        // Prüfe, ob beide Positionen im gleichen NavMesh-Bereich liegen
-        return hit.mask == referenceHit.mask;
-    }
-
-    bool IsPositionReachable(Vector3 from, Vector3 to)
-    {
-        float verticalDistance = Mathf.Abs(to.y - from.y);
-        float horizontalDistance = Vector3.Distance(new Vector3(to.x, 0, to.z), new Vector3(from.x, 0, from.z));
-        Debug.Log("VERTIKALE DISTANZ: " + verticalDistance + " ,   HORIZONTALE DISTANZ: " + horizontalDistance);
-        return verticalDistance <= maxVerticalDistance && horizontalDistance <= maxHorizontalDistance && horizontalDistance > 0;
-    }
-
-    void CreateNavMeshLink(Vector3 start, Vector3 end)
-    {
-        Debug.Log("link");
-        // Erstelle ein neues GameObject für den NavMeshLink
-        GameObject linkObject = new GameObject("NavMeshLink");
-        var navMeshLink = linkObject.AddComponent<NavMeshLink>();
-
-        // Setze die Start- und Endpunkte des Links
-        navMeshLink.startPoint = start;
-        navMeshLink.endPoint = end;
-
-        // Optional: Weitere Einstellungen
-        navMeshLink.width = 1.0f;
-        navMeshLink.costModifier = -1;
-        navMeshLink.bidirectional = true;
-
-        // Aktualisiere den Link
-        navMeshLink.UpdateLink();
-    }
-
-
-
-
     
-
-    public Transform getSpawnPosition() { return spawnPosition; }
 
     //erstelle ein 2 dimensionales Array (Map) von Position Points
     private void createMap(List<int> values, int testlength, int startHöhe, int zielHöhe)
@@ -313,7 +171,7 @@ public class WorldGeneration : MonoBehaviour
     GameObject Last = null;
     private void createTiles(int deleteHeight1, int deleteHeight2, int deleteHeight3)
     {
-        bool isSpawned = false;
+        
         foreach (PositionPoint p in map)
         {
             if(p.getX() == maplength-1 && p.getY()==maplength-1 || p.getX() == maplength - 1 && p.getY() == maplength - 2 || p.getX() == maplength - 1 && p.getY() == maplength - 3 
@@ -322,7 +180,7 @@ public class WorldGeneration : MonoBehaviour
             {
                 for (int i = 0; i < p.getValue(); i++)
                 {
-                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
+                    NavMeshLinkScript.GetComponent<AgentScript>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
 
                 }
                 if(p.getX() == maplength - 2 && p.getY() == maplength - 2)
@@ -330,14 +188,14 @@ public class WorldGeneration : MonoBehaviour
                     Last = Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
                     Last.layer = 7;
                     //NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Last);
-                    NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
+                    NavMeshLinkScript.GetComponent<AgentScript>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
                 }
                 else
                 {
                     GameObject Top = Instantiate(end_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
                     Top.layer = 7;
-                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
-                    NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
+                    NavMeshLinkScript.GetComponent<AgentScript>().AllTiles.Add(Top);
+                    NavMeshLinkScript.GetComponent<AgentScript>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
                 }
             }
             else if(p.getX() == 0 && p.getY() == 0 || p.getX() == 0 && p.getY() == 1 || p.getX() == 0 && p.getY() == 2
@@ -346,14 +204,14 @@ public class WorldGeneration : MonoBehaviour
             {
                 for (int i = 0; i < p.getValue(); i++)
                 {
-                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
+                    NavMeshLinkScript.GetComponent<AgentScript>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
 
                 }
 
                 GameObject Top = Instantiate(start_tile, new Vector3(p.getX(), p.getValue(), p.getY()), Quaternion.identity);
                 Top.layer = 7;
-                NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
-                NavMeshLinkScript.GetComponent<TESTTEST>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
+                NavMeshLinkScript.GetComponent<AgentScript>().AllTiles.Add(Top);
+                NavMeshLinkScript.GetComponent<AgentScript>().GoalPositions.Add(new Vector3(p.getX(), p.getValue(), p.getY()));
             }
             else
             {
@@ -362,44 +220,20 @@ public class WorldGeneration : MonoBehaviour
                 {
                     for (int i = 0; i < height; i++)
                     {
-                        NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
+                        NavMeshLinkScript.GetComponent<AgentScript>().AllTiles.Add(Instantiate(tile, new Vector3(p.getX(), i, p.getY()), Quaternion.identity));
 
                     }
                     GameObject Top = Instantiate(tile, new Vector3(p.getX(), height, p.getY()), Quaternion.identity);
                     //Last = Top;
                     Top.layer = 7;
-                    NavMeshLinkScript.GetComponent<TESTTEST>().AllTiles.Add(Top);
-                    /*
-                    if (!isSpawned)
-                    {
-
-                        spawnPosition.position = new Vector3(p.getX(), height + 1, p.getY());
-                        //spawnPosition.rotation = Quaternion.Euler(0,210,0);
-                        isSpawned = true;
-                        player.transform.position = spawnPosition.position;
-                        player.transform.rotation = spawnPosition.rotation;
-                    }
-                    */
+                    NavMeshLinkScript.GetComponent<AgentScript>().AllTiles.Add(Top);
+                    
                 }
             }
 
-                
-
         }
-        //Debug.LogWarning(" Postion des letzten " + Last.transform.position);
-        //Destroy(Last);
-        //Last = Instantiate(end_tile, Last.transform.position, Quaternion.identity);
-        //Last.layer = 7;
 
     }
-
-    public void ReloadPlayerPos()
-    {
-
-        player.transform.position = spawnPosition.position;
-        player.transform.rotation = spawnPosition.rotation;
-    }
-
 
 
     private void LogMap()
@@ -610,137 +444,13 @@ public class WorldGeneration : MonoBehaviour
 
     }
 
-    private void diamond_first_step()
-    {
-        fügePositionPointinMapein(diamond_berechne_neuen_punkt(map[0, 0], map[0, maplength - 1], map[maplength - 1, 0], map[maplength - 1, maplength - 1]));
-        Debug.Log("nach first STEP");
-        LogMap();
-    }
-
-    private void diamond_point_ausViereck()
-    {
-        foreach (List<PositionPoint> viereck in diamond_Vierecke)
-        {
-            diamond_berechne_neuen_punkt(viereck.ElementAt(0), viereck.ElementAt(1), viereck.ElementAt(2), viereck.ElementAt(3));
-        }
-        diamond_Vierecke.Clear();
-    }
+    
 
 
-    private void fügePositionPointinMapein(PositionPoint p)
-    {
-        map[p.getX(), p.getY()] = p;
-    }
+    
 
 
-    //erstellt zu berechnende Vierecke anhand der zuvor berechneten PositionPoints des diamond-Schritts
-    private void berechneVierecke()
-    {
-        foreach (PositionPoint p in diamond_calculated_positionPoints)
-        {
-            for (int z = 0; z <= 3; z++)
-            {
-                diamond_Vierecke.Add(Vierreck(p, nextPointInMap(z, p)));
-            }
-            diamond_calculated_positionPoints.Remove(p);
-        }
-    }
 
-
-    //gibt den nächstgelegenen bereits ausgefüllten Position Point in der Map zurück
-    //x=0 oben link
-    //1 oben recht
-    //2 unten links 
-    //3 unten rechts
-    private PositionPoint nextPointInMap(int x, PositionPoint p)
-    {
-        if (x == 2)      //links unten, immer ein schritt runter und nach links
-        {
-            int i = p.getX() - 1;
-            int j = p.getY() - 1;
-            while (i >= 0 && j >= 0)
-            {
-                if (map[i, j].getValue() != -100)
-                {
-                    return map[i, j];
-                }
-                else
-                {
-                    i--;
-                    j--;
-                }
-            }
-        }
-        else if (x == 1)  //oben rechts
-        {
-            int i = p.getX() + 1;
-            int j = p.getY() + 1;
-            while (i < maplength && j < maplength)
-            {
-                if (map[i, j].getValue() != -100)
-                {
-                    return map[i, j];
-                }
-                else
-                {
-                    i++;
-                    j++;
-                }
-            }
-        }
-        else if (x == 0)  //oben links (x Achse 0, y Achse MAX)
-        {
-            int i = p.getX() - 1;
-            int j = p.getY() + 1;
-            while (i >= 0 && j < maplength)
-            {
-                if (map[i, j].getValue() != -100)
-                {
-                    return map[i, j];
-                }
-                else
-                {
-                    i--;
-                    j++;
-                }
-            }
-        }
-        else if (x == 3)  //unten rechts
-        {
-            int i = p.getX() + 1;
-            int j = p.getY() - 1;
-            while (i < maplength && j >= 0)
-            {
-                if (map[i, j].getValue() != -100)
-                {
-                    return map[i, j];
-                }
-                else
-                {
-                    i++;
-                    j--;
-                }
-            }
-        }
-        return null;
-    }
-
-    private List<PositionPoint> Vierreck(PositionPoint p1, PositionPoint p2)
-    {
-        int MaxX = Math.Max(p1.getX(), p2.getX());
-        int MinX = Math.Min(p1.getX(), p2.getX());
-        int MaxY = Math.Max(p1.getY(), p2.getY());
-        int MinY = Math.Min(p1.getY(), p2.getY());
-        List<PositionPoint> vier = new List<PositionPoint>();
-        PositionPoint LeftTop = map[MinX, MinY];
-        PositionPoint RightTop = map[MinX, MaxY];
-        PositionPoint LeftDown = map[MaxX, MinY];
-        PositionPoint RightDown = map[MaxX, MaxY];
-
-        vier.Add(LeftTop); vier.Add(RightTop); vier.Add(LeftDown); vier.Add(RightDown);
-        return vier;
-
-    }
 
 
     private PositionPoint diamond_berechne_neuen_punkt(PositionPoint leftTop, PositionPoint rightTop, PositionPoint leftDown, PositionPoint rightDown)
@@ -775,12 +485,4 @@ public class WorldGeneration : MonoBehaviour
         return p;
     }
 
-
-    //hier wird der square Schritt durchgeführt. Es werden dazu 5 Punkte übergeben in der Reihenfolge LeftTop, RightTop, MiddleMiddle, LeftDown, RightDown. 
-    //Ahand dieser Punkte werden 4 neue Punkte berechnet
-    private List<PositionPoint> square_step(int[,] map)
-    {
-
-        return null;
-    }
 }
