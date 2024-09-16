@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class PlayerFall : MonoBehaviour
 {
     
-        public float fallThreshold = -10f; // Höhe, unter der der Spieler als "gefallen" gilt
+        public float fallThreshold = -1f; // Höhe, unter der der Spieler als "gefallen" gilt
         public GameObject gameOverUI; // Referenz auf das UI-Overlay
     private bool stopped = false;
 

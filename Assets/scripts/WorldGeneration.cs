@@ -79,7 +79,7 @@ public class WorldGeneration : MonoBehaviour
     public GameObject playerFallScript;
 
     public List<Color> mapColor = new List<Color>();
-
+    private bool noRepair = false;
     private void Start()
     {
         Debug.LogWarning(difficulty.Difficulty.ToString());
@@ -109,7 +109,7 @@ public class WorldGeneration : MonoBehaviour
 
 
 
-        if(NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert)
+        if(NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert && !noRepair)
         {
 
             //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
@@ -254,18 +254,23 @@ public class WorldGeneration : MonoBehaviour
 
     private void erstelleWelt(int diff)
     {
-        if(diff == 0)
+        if (diff == 0)
         {
-            diamond_square(17, 0, 8, 0, 1,3,7); createTiles(5,5,5);
+            diamond_square(17, 0, 8, 0, 1, 3, 7); createTiles(5, 5, 5);
         }
-        else if(diff == 1)
+        else if (diff == 1)
         {
 
-            diamond_square(17, 0, 12, -1, 2,3,10); createTiles(5,8,8);
+            diamond_square(17, 0, 12, -1, 2, 3, 10); createTiles(5, 8, 8);
         }
         else if (diff == 2)
         {
-            diamond_square(33, 0, 12, -2, 2,3,10); createTiles(4, 6, 8);
+            diamond_square(33, 0, 12, -2, 2, 3, 10); createTiles(4, 6, 8);
+        }
+        else if(diff == 3)
+        {
+            noRepair = true;
+            diamond_square(17, 0, 12, -1, 1, 3, 7); createTiles(0, 0, 0);
         }
     }
 
