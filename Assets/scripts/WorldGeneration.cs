@@ -12,6 +12,9 @@ using System.IO;
 using System.Net.Security;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using UnityEngine.UIElements;
+using UnityEditor.Search;
+using UnityEditor;
 
 public class WorldGeneration : MonoBehaviour
 {
@@ -54,13 +57,17 @@ public class WorldGeneration : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (PlayerReachedGoal())
+        if (!testing)
         {
-            gameWinUI.SetActive(true);
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-            Time.timeScale = 0f;
+            if (PlayerReachedGoal())
+            {
+                gameWinUI.SetActive(true);
+                UnityEngine.Cursor.visible = true;
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                Time.timeScale = 0f;
+            }
         }
+        
     }
 
     public bool PlayerReachedGoal()
@@ -80,13 +87,87 @@ public class WorldGeneration : MonoBehaviour
 
     public List<Color> mapColor = new List<Color>();
     private bool noRepair = false;
+
+    private static void ClearConsole()
+    {
+        // This method clears the console using internal Unity methods
+        var logEntries = System.Type.GetType("UnityEditor.LogEntries, UnityEditor.dll");
+        var clearMethod = logEntries.GetMethod("Clear", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+        clearMethod.Invoke(null, null);
+    }
+
+
+    long MeasureExecutionTime(int a)
+    {
+        Stopwatch stopwatch = new Stopwatch();
+
+
+        // Beispielmethode, die gemessen wird
+        if (a == 0)
+        {
+            //Generierung
+            stopwatch.Start();
+            erstelleWelt(difficulty.Difficulty);
+            stopwatch.Stop();
+        }
+        else if (a == 1)
+        {
+            //default agent
+            stopwatch.Start();
+            NavMeshLinkScript.GetComponent<AgentScript>().StartAgent(playerFallScript.GetComponent<PlayerFall>().initialPosition);
+            stopwatch.Stop();
+        }
+        else if (a == 2)
+        {
+            //repair agent
+            stopwatch.Start();
+            NavMeshLinkScript.GetComponent<AgentScript>().erweiteterAgent();
+            stopwatch.Stop();
+        }
+        return stopwatch.ElapsedMilliseconds;
+    }
+
+    void PrintExecutionTimes(long[,] times)
+    {
+        for (int i = 0; i < times.GetLength(0); i++)
+        {
+            string line = $"Iteration {i}: ";
+            for (int j = 0; j < times.GetLength(1); j++)
+            {
+                line += $"Messung {j + 1}: {times[i, j]} ms ";
+            }
+            Debug.Log(line);
+        }
+    }
+    //für Statistiken auf true setzen
+    private bool testing = true;
+
+
+    public static Stopwatch stopwatch = new Stopwatch();
+    public Stopwatch stopwatch2 = new Stopwatch();
+    public Stopwatch stopwatch3 = new Stopwatch();
+    public bool reachable;
+    public static List<int> timesGeneration = new List<int>();
+    public static List<int> timesDefaultAgent = new List<int>();
+    public static List<int> timesRepairAgent = new List<int>();
+    public static List<int> ListModifications = new List<int>();
+    public static List<int> ListPlayable = new List<int>(); //0 = without repair playable, 1 = with repair playable, 2 = not playable
     private void Start()
     {
-        Debug.LogWarning(difficulty.Difficulty.ToString());
+
+        bool playableChecked = false;
+        NavMeshLinkScript.GetComponent<AgentScript>().ModifikationsTransform.Clear();
+
+
+        if (!testing) { Debug.LogWarning(difficulty.Difficulty.ToString()); }
         Time.timeScale = 1f;
         gameWinUI.SetActive(false);
         NavMeshLinkScript.GetComponent<AgentScript>().newTile = new_tile;
+
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
         erstelleWelt(difficulty.Difficulty);
+        stopwatch.Stop();
 
         //NavMeshLinkScript.GetComponent<TESTTEST>().deleteObjectsBetween(new Vector3 (4,0,0), new Vector3(4, 0, 10));
 
@@ -94,42 +175,188 @@ public class WorldGeneration : MonoBehaviour
 
         surface.BuildNavMesh();
         //Vector3 startPosition = new Vector3(player.transform.position.x, player.transform.position.y - 1, player.transform.position.z);
-        Vector3 startPosition = new Vector3(1, 3,1);
+        Vector3 startPosition = new Vector3(1, 3, 1);
         //Debug.LogWarning(startPosition);
         NavMeshLinkScript.GetComponent<AgentScript>().PlayerStartPosition = startPosition;
         mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey); mapColor.Add(Color.blue); mapColor.Add(Color.red); mapColor.Add(Color.cyan); mapColor.Add(Color.yellow); mapColor.Add(Color.grey);
         NavMeshLinkScript.GetComponent<AgentScript>().Colors = mapColor;
-        Debug.LogWarning("Start Position: " + startPosition.ToString());
+        if (!testing)
+        {
+            Debug.Log("Start Position: " + startPosition.ToString());
+        }
         playerFallScript.GetComponent<PlayerFall>().initialPosition = startPosition;
         NavMeshLinkScript.GetComponent<AgentScript>().GoalTile = Last;
         //IsPositionOnNavMesh(startPosition);
         //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.blue;
-        NavMeshLinkScript.GetComponent<AgentScript>().destroyedTile = destroyed_tile; 
+        NavMeshLinkScript.GetComponent<AgentScript>().destroyedTile = destroyed_tile;
+
+        Stopwatch stopwatch2 = new Stopwatch();
+        stopwatch2.Start();
         NavMeshLinkScript.GetComponent<AgentScript>().StartAgent(startPosition);
+        stopwatch2.Stop();
+        if (testing) { ClearConsole(); }
+        
 
+        //UnityEngine.Debug.LogWarning("Generierung der Welt: " + stopwatch.ElapsedMilliseconds + " ms");
+        //UnityEngine.Debug.LogWarning("Normaler Agent:" + stopwatch2.ElapsedMilliseconds + " ms");
 
+        timesGeneration.Add((int)stopwatch.ElapsedMilliseconds);
+        Debug.LogWarning("Generierung der Welt: Anzahl in Liste: " + timesGeneration.Count());
+        showList(timesGeneration);
 
-        if(NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert && !noRepair)
+        timesDefaultAgent.Add((int)(stopwatch2.ElapsedMilliseconds));
+        Debug.LogWarning("Default Agent: Anzahl in Liste: " + timesDefaultAgent.Count());
+        showList(timesDefaultAgent);
+
+        if (NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == true)
+        {
+            ListPlayable.Add(0);
+            playableChecked = true;
+        }
+
+        if (NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert && !noRepair)
         {
 
             //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
-            
-            
-            Stopwatch stopwatch = new Stopwatch();
+
+
+            Stopwatch stopwatch3 = new Stopwatch();
 
             // Starte die Zeitmessung
-            stopwatch.Start();
+            stopwatch3.Start();
 
             // Der Code, dessen Ausführungszeit du messen möchtest
             NavMeshLinkScript.GetComponent<AgentScript>().erweiteterAgent();
 
             // Stoppe die Zeitmessung
-            stopwatch.Stop();
+            stopwatch3.Stop();
+            timesRepairAgent.Add((int)(stopwatch3.ElapsedMilliseconds));
+            Debug.LogWarning("Repair Agent: Anzahl in Liste: " + timesRepairAgent.Count());
+            showList(timesRepairAgent);
+
+            if (!playableChecked)
+            {
+                if (NavMeshLinkScript.GetComponent<AgentScript>().checkIfGoalIsReachableFromStart())
+                {
+                    ListPlayable.Add(1);
+                }
+                else
+                {
+                    ListPlayable.Add(2);
+                }
+            }
 
             // Ausgabe der gemessenen Zeit in Millisekunden
-            UnityEngine.Debug.Log("Ausführungszeit: " + stopwatch.Elapsed + " ms");
+            //UnityEngine.Debug.LogWarning("erweiteter Agent: " + stopwatch3.ElapsedMilliseconds + " ms");
+            HashSet<Vector3> Positions = new HashSet<Vector3>();
+            foreach (Transform t in NavMeshLinkScript.GetComponent<AgentScript>().ModifikationsTransform)
+            {
+                Positions.Add(t.position);
+            }
+            //UnityEngine.Debug.LogWarning("Modifikationen: " + NavMeshLinkScript.GetComponent<AgentScript>().ModifikationsTransform.Count());
+            //UnityEngine.Debug.LogWarning("Modifikationen: " + Positions.Count());
+            ListModifications.Add(Positions.Count());
+            Debug.LogWarning("Modifikationen: Anzahl in Liste: " + ListModifications.Count());
+            showListModifications(ListModifications);
+
+        }
+        if (testing)
+        {
+            if (timesGeneration.Count() == 1000)
+            {
+                //gebe Statistiken aus
+
+                levelPlayable();
+
+                float[] generation = MittelwertStandardabweichung(timesGeneration);
+                Debug.LogWarning("Generierung der Welt: " + timesGeneration.Count() + " Objekte  ||  Durchschnitt: " + timesGeneration.Average() + "  ||  Test: " + generation[0] + "  ||  Standaradabweichung: " + generation[1]);
+
+                float[] defaultagent = MittelwertStandardabweichung(timesDefaultAgent);
+                Debug.LogWarning("Default Agent: " + timesDefaultAgent.Count() + " Objekte  ||   Durchschnitt: " + timesDefaultAgent.Average() + "  ||   Test: " + defaultagent[0] + "   ||   Standaradabweichung: " + defaultagent[1]);
+
+                float[] repairAgent = MittelwertStandardabweichung(timesRepairAgent);
+                Debug.LogWarning("Repair Ahgnt: " + timesRepairAgent.Count() + " Objekte  ||   Durchschnitt: " + timesRepairAgent.Average() + "  ||   Test: " + repairAgent[0] + "   ||   Standaradabweichung: " + repairAgent[1]);
+
+                Debug.LogWarning("Modifikationen: Median: " + CalculateMedian(ListModifications) + "   ||  bei " + ListModifications.Count() + " Objekten   ||   Minimum: " + ListModifications.Min() + "   ||   Maximum :" + ListModifications.Max());
+                EditorApplication.isPaused = true;
+            }
+            else
+            {
+                playerFallScript.GetComponent<PlayerFall>().ReloadScene();
+
+            }
+        }
+        //UnityEngine.Debug.LogWarning("Goal Reachable: " + NavMeshLinkScript.GetComponent<AgentScript>().checkIfGoalIsReachableFromStart());
+        //reachable = NavMeshLinkScript.GetComponent<AgentScript>().checkIfGoalIsReachableFromStart();
+        
+
+
+    }
+
+    void levelPlayable()
+    {
+        Debug.LogWarning("Level Playable? Ja, ohne Reparatur: " + countX(ListPlayable,0) +"  ||  Ja, mit Reparatur: " + countX(ListPlayable,1) +"  || Nein: "+countX(ListPlayable,2));
+    }
+    int countX(List<int> a, int X)
+    {
+        int counter = 0;
+        foreach (int i in a)
+        {
+            if (i == X) { counter++; }
+        }
+        return counter;
+    }
+
+    float CalculateMedian(List<int> values)
+    {
+        // Liste sortieren
+        values.Sort();
+
+        int count = values.Count;
+        if (count == 0)
+        {
+            Debug.LogWarning("Die Liste ist leer.");
+            return 0; // Oder einen anderen Wert zurückgeben, der anzeigt, dass kein Median existiert.
         }
 
+        // Median berechnen
+        if (count % 2 == 0) // Wenn die Anzahl der Elemente gerade ist
+        {
+            // Durchschnitt der beiden mittleren Werte
+            return (values[count / 2 - 1] + values[count / 2]) / 2;
+        }
+        else // Wenn die Anzahl der Elemente ungerade ist
+        {
+            // Der mittlere Wert
+            return values[count / 2];
+        }
+    }
+
+
+    private float[] MittelwertStandardabweichung(List<int> l)
+    {
+        float[] a = new float[2];
+        float mean = (float)l.Average();
+        a[0] = mean;
+        float sumOfSquaresOfDifferences = l.Select(val => (val - mean) * (val - mean)).Sum();
+        float standardDeviation = Mathf.Sqrt(sumOfSquaresOfDifferences / l.Count);
+        a[1] = standardDeviation;
+        return a;
+    }
+
+    private void showList(List<int> a)
+    {
+        foreach(int i in a)
+        {
+            Debug.Log(i +" ms");
+        }
+    }
+    private void showListModifications(List<int> a)
+    {
+        foreach (int i in a)
+        {
+            Debug.Log(i + " modifications");
+        }
     }
 
     //erstelle ein 2 dimensionales Array (Map) von Position Points

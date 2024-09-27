@@ -11,6 +11,7 @@ using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
+using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
@@ -21,7 +22,9 @@ public class AgentScript : MonoBehaviour
     public NavMeshSurface surface;
     public GameObject player;
     public Vector3 PlayerStartPosition;
-    public GameObject GoalTile; 
+    public GameObject GoalTile;
+
+    private bool statistics = true; //für Statistiken, entfernt andere Logs
     
 
     private bool ZielMitDoppelsprungerreichbar(Vector3 p)
@@ -38,7 +41,10 @@ public class AgentScript : MonoBehaviour
 
     bool IstImSpielBereich(Vector3 p)
     {
-        return (0 <= p.x && p.x <= 32  && 0 <= p.z && p.z <= 32);
+        int b;
+        if(difficulty.Difficulty == 2) { b = 32; }
+        else { b = 16; }
+        return (0 <= p.x && p.x <= b  && 0 <= p.z && p.z <= b);
     }
 
     public List<Vector3> reachablePositions; 
@@ -49,9 +55,9 @@ public class AgentScript : MonoBehaviour
     //gibt die erste Position zurück, die durch einen Doppelsprung erreicht werden kann
     Vector3 erweiteterSprung(Vector3 p)
     {
-        
-        if(Vector3.Distance(p, GoalTile.transform.position) < 3)
-        Debug.Log("erweiteter Sprung mit Startposition "+ p.ToString());    
+
+        if (Vector3.Distance(p, GoalTile.transform.position) < 3)
+            if (!statistics) { Debug.Log("erweiteter Sprung mit Startposition " + p.ToString()); }    
         Vector3 finalPosition = new Vector3(100, 100, 100); 
         Vector3 Test = new Vector3(100, 100, 100);
         for (int height = 1; height >= 1; height--)
@@ -162,12 +168,12 @@ public class AgentScript : MonoBehaviour
                 }
             }
         }
-        Debug.LogWarning("kein erweiterter Sprung gefunden");
+        if (!statistics) { Debug.LogWarning("kein erweiterter Sprung gefunden"); }
         return Test;
     }
     Vector3 erweiteterSprung2(Vector3 zwischenpos, Vector3 startPos)
     {
-        Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString());
+        if (!statistics) { Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString()); }
         Vector3 endPos;
         for (int height = 1; height >= -1; height--)
         {
@@ -258,11 +264,11 @@ public class AgentScript : MonoBehaviour
 
         ColorChangeFarbe = Colors.First();
         Colors.Remove(Colors.First());
-        Debug.LogWarning("ERWEITERTER AGENT mit Iteration " + Iteration);
+        //Debug.LogWarning("ERWEITERTER AGENT mit Iteration " + Iteration);
         reachablePositions.Add(PlayerStartPosition);
         Vector3 closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions); //NavMeshs, die nur 1 Position enthalten werden nicht berücksichtigt
         checkIfGoalIsReachable(closestPos);
-        Debug.Log("Nächste Position: " + closestPos.ToString());
+        if (!statistics) { Debug.Log("Nächste Position: " + closestPos.ToString()); }
 
 
         List<Vector3> NavMesh = FindNavMeshFromPos(closestPos);     //Fehler bei closestPos = (0,0,0)
@@ -284,7 +290,7 @@ public class AgentScript : MonoBehaviour
                     Vector3 SprungPos = erweiteterSprung(position);
                     if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
                     {
-                        Debug.Log("Neue Position gefunden " + SprungPos.ToString() + " über Zwischenposition: " + zwischenpos.ToString());
+                        if (!statistics) { Debug.Log("Neue Position gefunden " + SprungPos.ToString() + " über Zwischenposition: " + zwischenpos.ToString()); }
                         reachablePositions.Add(SprungPos);
                         if (ZielErreichbar)
                         {
@@ -330,12 +336,12 @@ public class AgentScript : MonoBehaviour
                             Vector3 SprungPos = erweiteterSprung3(p, position);
                             if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
                             {
-                                AllTiles.Add(Instantiate(newTile, p, Quaternion.identity));
-                                AllTiles.Add(Instantiate(newTile, position, Quaternion.identity));
+                                AllTiles.Add(Instantiate(newTile, p, Quaternion.identity)); 
+                                AllTiles.Add(Instantiate(newTile, position, Quaternion.identity)); 
                                 RemoveObjectsAbove(p);
                                 ErweitertCreateNavMeshLink(p, SprungPos, zwischenpos);
                                 gefunden = true;
-                                Debug.LogWarning("Dreifachsprung " +zwischenpos.ToString());
+                                if (!statistics) { Debug.LogWarning("Dreifachsprung " + zwischenpos.ToString()); }
                                 reachablePositions.Add(SprungPos);
                                 surface.BuildNavMesh();
 
@@ -356,7 +362,7 @@ public class AgentScript : MonoBehaviour
             }
             if(gefunden == false)
             {
-                Debug.LogWarning("Kein Dreifachsprung");
+                if (!statistics) { Debug.LogWarning("Kein Dreifachsprung"); }
             }
 
         }
@@ -381,17 +387,19 @@ public class AgentScript : MonoBehaviour
     //gibt true zrück, wenn sich keine der Vektoren übereinander befinden
     private bool NichtÜbereinander(Vector3 a, Vector3 b, Vector3 c)
     {
-        if (a.x == b.x && a.z == b.z) { Debug.LogWarning("Übereinander " + a.ToString() + b.ToString()); return false; }
-        if (a.x == c.x && a.z == c.z) { Debug.LogWarning("Übereinander " + a.ToString() + c.ToString()); return false; }
-        if (b.x == c.x && b.z == c.z) { Debug.LogWarning("Übereinander " + b.ToString() + c.ToString()); return false; }
-        Debug.LogWarning("Nicht Übereinander " + a.ToString() + b.ToString() + c.ToString()); return true;
+        if (a.x == b.x && a.z == b.z) { if (!statistics) { Debug.LogWarning("Übereinander " + a.ToString() + b.ToString()); } return false; }
+        if (a.x == c.x && a.z == c.z) {
+            if (!statistics) { Debug.LogWarning("Übereinander " + a.ToString() + c.ToString()); } return false; }
+        if (b.x == c.x && b.z == c.z) {
+            if (!statistics) { Debug.LogWarning("Übereinander " + b.ToString() + c.ToString()); } return false; }
+        if (!statistics) { Debug.LogWarning("Nicht Übereinander " + a.ToString() + b.ToString() + c.ToString()); } return true;
     }
 
 
     //für Dreifachsprung
     Vector3 erweiteterSprung23(Vector3 zwischenpos, Vector3 startPos, Vector3 ursprünglicherStart)
     {
-        Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString());
+        if (!statistics) { Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString()); }
         Vector3 endPos;
         for (int height = 1; height >= -1; height--)
         {
@@ -475,7 +483,10 @@ public class AgentScript : MonoBehaviour
     //DreifachSprung
     Vector3 erweiteterSprung3(Vector3 p, Vector3 start)
     {
-        Debug.Log("erweiteter Sprung mit Startposition " + p.ToString());
+        if (!statistics)
+        {
+            Debug.Log("erweiteter Sprung mit Startposition " + p.ToString());
+        }
         Vector3 finalPosition = new Vector3(100, 100, 100);
         Vector3 Test = new Vector3(100, 100, 100);
         for (int height = 1; height >= 1; height--)
@@ -567,7 +578,10 @@ public class AgentScript : MonoBehaviour
                 }
             }
         }
-        Debug.LogWarning("kein erweiterter Sprung gefunden");
+        if (!statistics)
+        {
+            Debug.LogWarning("kein erweiterter Sprung gefunden");
+        }
         return Test;
     }
 
@@ -765,7 +779,11 @@ public class AgentScript : MonoBehaviour
             if (path.status == NavMeshPathStatus.PathComplete)
             {
                 //Ziel ist für Spieler erreichbar
-                Debug.LogWarning("Ziel ist für Spieler erreichbar");
+                if (!statistics)
+                {
+                    Debug.LogWarning("Ziel ist für Spieler erreichbar von Position : " + pos.ToSafeString());
+                }
+                CreateNavMeshLink(pos, GoalTile.transform.position);
                 GoalReachable = true;
 
             }
@@ -774,6 +792,28 @@ public class AgentScript : MonoBehaviour
                 //Debug.LogWarning("Ziel ist für Spieler NICHT erreichbar");
             }
         }
+    }
+
+
+    //für Automatisierte Statistik, zum Überprüfen ob korrekt gearbeitet wurde
+    public bool checkIfGoalIsReachableFromStart()
+    {
+
+        NavMeshPath path = new NavMeshPath();
+        if (NavMesh.CalculatePath(PlayerStartPosition, GoalTile.transform.position, NavMesh.AllAreas, path))
+        {
+            // Überprüft, ob der berechnete Pfad vollständig ist
+            if (path.status == NavMeshPathStatus.PathComplete)
+            {
+                return true;
+
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return false;
     }
 
 
@@ -975,7 +1015,10 @@ public class AgentScript : MonoBehaviour
     public void Agent(Vector3 startPosition)
     {
 
-        Debug.Log("AA aus TEST");
+        if (!statistics)
+        {
+            Debug.Log("AA aus TEST");
+        }
         if (!GoalReachable)
         {
             l = durchquereNavMeshGebiet(startPosition);
@@ -1085,28 +1128,56 @@ public class AgentScript : MonoBehaviour
                 navMeshLink2.UpdateLink();
                 check(zwischenposition, start, end);
                 surface.BuildNavMesh();
-                
-            }
-        
+
+        }
+
     }
 
     public GameObject newTile;
 
-    //überprüft, ob ein Block erstellt oder entfernt werden muss
-    void check(Vector3 zwischenpos, Vector3 startpos, Vector3 endpos)
+    void ForceNavMeshLink(Vector3 start, Vector3 end)
+    {
+
+        //Debug.Log("link");
+        // Erstelle ein neues GameObject für den NavMeshLink
+        GameObject linkObject = new GameObject("NavMeshLink");
+        var navMeshLink = linkObject.AddComponent<NavMeshLink>();
+
+        // Setze die Start- und Endpunkte des Links
+        navMeshLink.startPoint = start;
+        navMeshLink.endPoint = end;
+
+        // Optional: Weitere Einstellungen
+        navMeshLink.width = 1.0f;
+        navMeshLink.costModifier = -1;
+        navMeshLink.bidirectional = true;
+
+        // Aktualisiere den Link
+        navMeshLink.UpdateLink();
+        positionsToCheck.Enqueue(end);
+        //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
+    }
+
+
+        //überprüft, ob ein Block erstellt oder entfernt werden muss
+        void check(Vector3 zwischenpos, Vector3 startpos, Vector3 endpos)
     {
         if (isAObjectinMap(zwischenpos))
         {
             deleteObjectsBetween(startpos, zwischenpos);
             RemoveObjectsAbove(zwischenpos);
             deleteObjectsBetween(zwischenpos, endpos);
+            //surface.BuildNavMesh();
+            ForceNavMeshLink(startpos, endpos); //für anschließenden Test für Statistik
             //entferne die Blöcke oberhalb und alle, die in der NavLink Linie liegen
         }
         else
         {
             //zerstöre alle Objekte, die in der NavLink Linie liegen
             deleteObjectsBetween(startpos, zwischenpos);
-            AllTiles.Add(Instantiate(newTile, zwischenpos, Quaternion.identity));
+            modifications++;
+            GameObject ob = Instantiate(newTile, zwischenpos, Quaternion.identity); AllTiles.Add(ob);
+            ModifikationsTransform.Add(ob.transform);
             //unterhalb auch noch mit Objekten füllen
             deleteObjectsBetween(zwischenpos, endpos);
         }
@@ -1116,14 +1187,20 @@ public class AgentScript : MonoBehaviour
 
     void RemoveObjectsAbove(Vector3 position)
     {
-        Debug.LogWarning("Remove Objects Above " + position.ToString());
+        if (!statistics)
+        {
+            Debug.LogWarning("Remove Objects Above " + position.ToString());
+        }
         RaycastHit hit;
         List<Vector3> positions = new List<Vector3>();
 
         // Führe einen vertikalen Raycast nach oben durch
         while (Physics.Raycast(position, Vector3.up, out hit, Mathf.Infinity))
         {
-            Debug.Log("Entferne Objekt oberhalb der Position: " + hit.collider.name);
+            if (!statistics)
+            {
+                Debug.Log("Entferne Objekt oberhalb der Position: " + hit.collider.name);
+            }
 
             positions.Add(hit.collider.gameObject.transform.position);
 
@@ -1143,12 +1220,17 @@ public class AgentScript : MonoBehaviour
             {
                 CreatedPositions.Add(pos);
                 GameObject ob = Instantiate(destroyedTile, pos, Quaternion.identity);
+                ModifikationsTransform.Add(ob.transform);
+                modifications++;
             }
         }
-
-        Debug.Log("Alle Objekte oberhalb der Position wurden entfernt.");
+        if (!statistics)
+        {
+            Debug.Log("Alle Objekte oberhalb der Position wurden entfernt.");
+        }
     }
 
+    public HashSet<Transform> ModifikationsTransform = new HashSet<Transform>();
 
     public GameObject destroyedTile;
 
@@ -1156,7 +1238,7 @@ public class AgentScript : MonoBehaviour
     {
         List<Vector3> positions = new List<Vector3>();
         bool blockiert = true;
-        if(startpos.x !=  endpos.x && startpos.z != endpos.z) 
+        if (startpos.x != endpos.x && startpos.z != endpos.z)
         {
             //links und rechts wird auch gelöscht
             for (float x = 0.5f; x >= -0.5f; x = x - 0.5f)
@@ -1178,15 +1260,24 @@ public class AgentScript : MonoBehaviour
                     int safetyCounter = 100;  // Begrenze die Anzahl der Versuche
                     while (blockiert && safetyCounter > 0)
                     {
-                        Debug.Log("TT");
+                        if (!statistics)
+                        {
+                            Debug.Log("TT");
+                        }
                         if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                         {
-                            Debug.Log("Weg blockiert von: " + hit.collider.name);
+                            if (!statistics)
+                            {
+                                Debug.Log("Weg blockiert von: " + hit.collider.name);
+                            }
                             if (hit.collider.gameObject == destroyedTile || hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject.transform == GoalTile.transform || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
                             else
                             {
                                 Destroy(hit.collider.gameObject.transform.parent.gameObject);
-                                Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                                if (!statistics)
+                                {
+                                    Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                                }
                                 start = hit.point + direction.normalized * 0.1f;
                                 direction = end - start;
                                 distance = direction.magnitude;
@@ -1228,14 +1319,24 @@ public class AgentScript : MonoBehaviour
                 int safetyCounter = 50;  // Begrenze die Anzahl der Versuche
                 while (blockiert && safetyCounter > 0)
                 {
-                    Debug.Log("TT");
+                    if (!statistics)
+                    {
+                        Debug.Log("TT");
+                    }
                     if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                     {
-                        Debug.Log("Weg blockiert von: " + hit.collider.name);
-                        if (hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject==null || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
-                        else{
-                            Destroy(hit.collider.gameObject.transform.parent.gameObject);
-                            Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                        if (!statistics)
+                        {
+                            Debug.Log("Weg blockiert von: " + hit.collider.name);
+                        }
+                        if (hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject == null || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
+                        else
+                        {
+                            Destroy(hit.collider.gameObject.transform.parent.gameObject); 
+                            if (!statistics)
+                            {
+                                Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                            }
                             start = hit.point + direction.normalized * 0.1f;
                             direction = end - start;
                             distance = direction.magnitude;
@@ -1257,19 +1358,21 @@ public class AgentScript : MonoBehaviour
                 blockiert = true;
             }
         }
-        
-        
+
+
         List<Vector3> CreatedPositions = new List<Vector3>();
-        foreach(Vector3 pos in positions)
+        foreach (Vector3 pos in positions)
         {
             if (!CreatedPositions.Contains(pos))
             {
                 CreatedPositions.Add(pos);
                 GameObject ob = Instantiate(destroyedTile, pos, Quaternion.identity);
+                modifications++;
+                ModifikationsTransform.Add(ob.transform);
                 Collider objectCollider = ob.GetComponent<Collider>();
                 if (objectCollider != null)
                 {
-                    Debug.LogWarning("TESTTESTTEST");
+                    //Debug.LogWarning("TESTTESTTEST");
                     objectCollider.enabled = false; // Deaktiviert den Collider
                 }
                 ob.GetComponent<Collider>().enabled = false;
@@ -1278,7 +1381,9 @@ public class AgentScript : MonoBehaviour
         }
     }
 
-    
+    public int modifications;
+
+
 
     bool isAObjectinMap(Vector3 pos)
     {
@@ -1287,13 +1392,18 @@ public class AgentScript : MonoBehaviour
 
         if (hitColliders.Length > 0)
         {
-
-            Debug.Log("Ein Block ist an der Position.");
+            if (!statistics)
+            {
+                Debug.Log("Ein Block ist an der Position.");
+            }
             return true;
         }
         else
         {
-            Debug.Log("Kein Block an der Position.");
+            if (!statistics)
+            {
+                Debug.Log("Kein Block an der Position.");
+            }
             return false;
         }
     }

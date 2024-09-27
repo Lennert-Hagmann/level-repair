@@ -14,6 +14,9 @@ public class PlayerFall : MonoBehaviour
     private GameObject player;
     public GameObject cube;
     public GameObject WorldGeneration;
+
+
+    public int counter = 0;
     void Start()
         {
         player = transform.parent.gameObject;
