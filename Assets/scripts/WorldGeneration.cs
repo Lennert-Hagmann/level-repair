@@ -140,7 +140,7 @@ public class WorldGeneration : MonoBehaviour
         }
     }
     //für Statistiken auf true setzen
-    private bool testing = true;
+    private bool testing = false;
 
 
     public static Stopwatch stopwatch = new Stopwatch();
@@ -214,7 +214,7 @@ public class WorldGeneration : MonoBehaviour
             playableChecked = true;
         }
 
-        if (NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert && !noRepair)
+        if (NavMeshLinkScript.GetComponent<AgentScript>().GoalReachable == false && erweitert)
         {
 
             //NavMeshLinkScript.GetComponent<TESTTEST>().ColorChangeFarbe = Color.red;
@@ -233,31 +233,33 @@ public class WorldGeneration : MonoBehaviour
             timesRepairAgent.Add((int)(stopwatch3.ElapsedMilliseconds));
             Debug.LogWarning("Repair Agent: Anzahl in Liste: " + timesRepairAgent.Count());
             showList(timesRepairAgent);
+            bool repaired = false;
 
             if (!playableChecked)
             {
                 if (NavMeshLinkScript.GetComponent<AgentScript>().checkIfGoalIsReachableFromStart())
                 {
                     ListPlayable.Add(1);
+                    repaired = true;
                 }
                 else
                 {
                     ListPlayable.Add(2);
+                    repaired = false;
                 }
             }
-
-            // Ausgabe der gemessenen Zeit in Millisekunden
-            //UnityEngine.Debug.LogWarning("erweiteter Agent: " + stopwatch3.ElapsedMilliseconds + " ms");
-            HashSet<Vector3> Positions = new HashSet<Vector3>();
-            foreach (Transform t in NavMeshLinkScript.GetComponent<AgentScript>().ModifikationsTransform)
+            if(repaired == true)
             {
-                Positions.Add(t.position);
+                HashSet<Vector3> Positions = new HashSet<Vector3>();
+                foreach (Transform t in NavMeshLinkScript.GetComponent<AgentScript>().ModifikationsTransform)
+                {
+                    Positions.Add(t.position);
+                }
+                ListModifications.Add(Positions.Count());
+                Debug.LogWarning("Modifikationen: Anzahl in Liste: " + ListModifications.Count());
+                showListModifications(ListModifications);
             }
-            //UnityEngine.Debug.LogWarning("Modifikationen: " + NavMeshLinkScript.GetComponent<AgentScript>().ModifikationsTransform.Count());
-            //UnityEngine.Debug.LogWarning("Modifikationen: " + Positions.Count());
-            ListModifications.Add(Positions.Count());
-            Debug.LogWarning("Modifikationen: Anzahl in Liste: " + ListModifications.Count());
-            showListModifications(ListModifications);
+            
 
         }
         if (testing)
@@ -497,7 +499,13 @@ public class WorldGeneration : MonoBehaviour
         else if(diff == 3)
         {
             noRepair = true;
-            diamond_square(17, 0, 12, -1, 1, 3, 7); createTiles(0, 0, 0);
+            //Beispiel Pathfinding
+            //diamond_square(9, 0, 10, -1, 2, 3, 7); createTiles(0, 0, 0);
+
+
+            //Beispiel Repair
+            diamond_square(9, 0, 10, -1, 2, 3, 9); createTiles(0, 0, 0);
+            //diamond_square(17, 0, 12, -3, 3, 3, 10); createTiles(0, 0, 0);
         }
     }
 

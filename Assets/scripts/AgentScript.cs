@@ -56,8 +56,7 @@ public class AgentScript : MonoBehaviour
     Vector3 erweiteterSprung(Vector3 p)
     {
 
-        if (Vector3.Distance(p, GoalTile.transform.position) < 3)
-            if (!statistics) { Debug.Log("erweiteter Sprung mit Startposition " + p.ToString()); }    
+        if (!statistics) { Debug.Log("erweiteter Sprung mit Startposition " + p.ToString()); }    
         Vector3 finalPosition = new Vector3(100, 100, 100); 
         Vector3 Test = new Vector3(100, 100, 100);
         for (int height = 1; height >= 1; height--)
@@ -67,7 +66,7 @@ public class AgentScript : MonoBehaviour
             {
 
                 // Positive x zuerst
-                int positiveX = x;  // z.B. 1, 2, 3
+                //int positiveX = x;  // z.B. 1, 2, 3
                     for (int z = 0; z <= 3; z++)
                     {
                         // Positive Z zuerst
@@ -271,107 +270,142 @@ public class AgentScript : MonoBehaviour
         if (!statistics) { Debug.Log("Nächste Position: " + closestPos.ToString()); }
 
 
-        List<Vector3> NavMesh = FindNavMeshFromPos(closestPos);     //Fehler bei closestPos = (0,0,0)
+        List<Vector3> NavMesh = FindNavMeshFromPos(closestPos);                                                                                                                                                                                     //Fehler bei closestPos = (0,0,0)
         bool gefunden = false;
         bool ZielErreichbar = false;
+        bool NichtReparierbar = false;
         Vector3 newPos = new Vector3();
         if (!GoalReachable)
         {
-            List<Vector3> sortedNavMesh = NavMesh
-            .OrderByDescending(v => v.x)  // Sortiere nach der X-Koordinate absteigend
-            .ThenByDescending(v => v.z)   // Sortiere nach der Z-Koordinate absteigend
-            .ToList();
-            foreach (Vector3 position in sortedNavMesh)
+            int counter = 0;
+            while ((gefunden == false && counter < 10) && !NichtReparierbar)
             {
-
-                if (ZielMitDoppelsprungerreichbar(position)) { ZielErreichbar = true; }
-                if (gefunden == false)
+                
+                List<Vector3> sortedNavMesh = NavMesh
+                .OrderByDescending(v => v.x)  // Sortiere nach der X-Koordinate absteigend
+                .ThenByDescending(v => v.z)   // Sortiere nach der Z-Koordinate absteigend
+                .ToList();
+                foreach (Vector3 position in sortedNavMesh)
                 {
-                    Vector3 SprungPos = erweiteterSprung(position);
-                    if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
-                    {
-                        if (!statistics) { Debug.Log("Neue Position gefunden " + SprungPos.ToString() + " über Zwischenposition: " + zwischenpos.ToString()); }
-                        reachablePositions.Add(SprungPos);
-                        if (ZielErreichbar)
-                        {
-                            if (SprungPos == GoalTile.transform.position)
-                            {
 
-                                gefunden = true;
-                                ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
-                                newPos = SprungPos;
+                    if (ZielMitDoppelsprungerreichbar(position)) { ZielErreichbar = true; }
+                    if (gefunden == false)
+                    {
+                        Vector3 SprungPos = erweiteterSprung(position);
+                        if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
+                        {
+                            if (!statistics) { Debug.Log("Neue Position gefunden " + SprungPos.ToString() + " über Zwischenposition: " + zwischenpos.ToString()); }
+                            reachablePositions.Add(SprungPos);
+                            if (ZielErreichbar)
+                            {
+                                if (SprungPos == GoalTile.transform.position)
+                                {
+
+                                    gefunden = true;
+                                    ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
+                                    newPos = SprungPos;
+                                }
+                                else
+                                {
+
+                                }
                             }
                             else
                             {
-
-                            }
-                        }
-                        else
-                        {
-                            gefunden = true;
-                            ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
-                            newPos = SprungPos;
-                        }
-                    }
-                }
-
-            }
-            if (gefunden == false)
-            {
-                //mach dreifachSprung
-
-                foreach(Vector3 position in sortedNavMesh)
-                {
-                    Vector3[] loru = new Vector3[] {
-                    new Vector3(position.x, position.y+1, position.z+1),
-                    new Vector3(position.x+1, position.y+1, position.z),
-                    new Vector3(position.x, position.y+1, position.z-1),
-                    new Vector3(position.x-1, position.y+1, position.z),
-                    };
-
-                    foreach(Vector3 p in loru) 
-                    {
-                        if (!gefunden)
-                        {
-                            Vector3 SprungPos = erweiteterSprung3(p, position);
-                            if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
-                            {
-                                AllTiles.Add(Instantiate(newTile, p, Quaternion.identity)); 
-                                AllTiles.Add(Instantiate(newTile, position, Quaternion.identity)); 
-                                RemoveObjectsAbove(p);
-                                ErweitertCreateNavMeshLink(p, SprungPos, zwischenpos);
                                 gefunden = true;
-                                if (!statistics) { Debug.LogWarning("Dreifachsprung " + zwischenpos.ToString()); }
-                                reachablePositions.Add(SprungPos);
-                                surface.BuildNavMesh();
+                                try
+                                {
+                                    ErweitertCreateNavMeshLink(position, SprungPos, zwischenpos);
+                                    newPos = SprungPos;
 
-                                List<Vector3> n = new List<Vector3>();
-                                n.Add(zwischenpos);
-                                ListOfNavMeshs.Add(n);
-                                List<Vector3> na = new List<Vector3>();
-                                na.Add(SprungPos);
-                                ListOfNavMeshs.Add(na);
-
+                                }
+                                catch(Exception ex) { Debug.LogException(ex); }
                             }
                         }
-                        
                     }
 
+                }
+                /*
+                if (gefunden == false)
+                {
+                    //mach dreifachSprung
+                    //aus Zeitgründen nicht fertiggestellt
+                    
+                    foreach (Vector3 position in sortedNavMesh)
+                    {
+                        Vector3[] loru = new Vector3[] {
+                        new Vector3(position.x, position.y+1, position.z+1),
+                        new Vector3(position.x+1, position.y+1, position.z),
+                        new Vector3(position.x, position.y+1, position.z-1),
+                        new Vector3(position.x-1, position.y+1, position.z),
+                        };
+
+                        foreach (Vector3 p in loru)
+                        {
+                            if (!gefunden)
+                            {
+                                Vector3 SprungPos = erweiteterSprung3(p, position);
+                                if (SprungPos.x != 100 || SprungPos.y != 100 || SprungPos.z != 100)
+                                {
+                                    AllTiles.Add(Instantiate(newTile, p, Quaternion.identity));
+                                    AllTiles.Add(Instantiate(newTile, position, Quaternion.identity));
+                                    RemoveObjectsAbove(p);
+                                    ErweitertCreateNavMeshLink(p, SprungPos, zwischenpos);
+                                    gefunden = true;
+                                    if (!statistics) { Debug.LogWarning("Dreifachsprung " + zwischenpos.ToString()); }
+                                    reachablePositions.Add(SprungPos);
+                                    surface.BuildNavMesh();
+
+                                    List<Vector3> n = new List<Vector3>();
+                                    n.Add(zwischenpos);
+                                    ListOfNavMeshs.Add(n);
+                                    List<Vector3> na = new List<Vector3>();
+                                    na.Add(SprungPos);
+                                    ListOfNavMeshs.Add(na);
+
+                                }
+                            }
+
+                        }
+
+
+                    }
                     
                 }
+                if (gefunden == false)
+                {
+                    if (!statistics) { Debug.LogWarning("Kein Dreifachsprung"); }
+                }
+                 */
+                counter++;
+                if(gefunden == false)
+                {
+                    //suche neue Position
+                    closestPos = FindClosestPosition(GoalTile.transform.position, reachablePositions);
+                    if (closestPos == Vector3.zero)
+                    {
+                        //Nicht durch Doppelsprung reparierbar
+                        NichtReparierbar = true;
+                    }
+                    else
+                    {
+                        NavMesh = FindNavMeshFromPos(closestPos);
+
+                    }
+                }
+                
             }
-            if(gefunden == false)
-            {
-                if (!statistics) { Debug.LogWarning("Kein Dreifachsprung"); }
-            }
+            if(gefunden == false) { Debug.LogWarning("kein Feld gefunden"); }
+
 
         }
-        if (!GoalReachable)
+        if (NichtReparierbar) { Debug.LogWarning("Level nicht durch Doppelsprung reparierbar"); }
+        if (!GoalReachable && !NichtReparierbar)
         {
             Agent(newPos);
 
         }
-        if (!GoalReachable)
+        if (!GoalReachable && !NichtReparierbar)
         {
             if (Iteration < 6)
             {
@@ -619,8 +653,17 @@ public class AgentScript : MonoBehaviour
                 closestPosition = position;
             }
         }
+        List<Vector3> list = FindNavMeshFromPos(closestPosition);
+        if(list == null)
+        {
+            return Vector3.zero;
+        }
 
-        untersuchtePos.Add(closestPosition);
+        foreach (Vector3 position in FindNavMeshFromPos(closestPosition))
+        {
+            untersuchtePos.Add(position);
+        }
+        
 
         // Gib die nächste Position zurück
         return closestPosition;
@@ -642,9 +685,23 @@ public class AgentScript : MonoBehaviour
 
         // Führe den Raycast mit der Layer Mask durch
         RaycastHit hit;
-        for(int height=0; height<=1; height++)
+        try
         {
-            Vector3 startPosition = new Vector3(startPoint.x, startPoint.y + height, startPoint.z); 
+            /*
+            for(int height=0; height<=1; height++)
+            {
+                Vector3 startPosition = new Vector3(startPoint.x, startPoint.y + height, startPoint.z); 
+
+                if (Physics.Raycast(startPosition, direction.normalized, out hit, distance, collisionMask))
+                {
+                    // Wenn der Raycast auf etwas trifft, bedeutet das, dass der Weg blockiert ist
+                    Debug.Log("Weg blockiert von: " + hit.collider.name);
+                    return false;
+                }
+            }
+            */
+
+            Vector3 startPosition = new Vector3(startPoint.x, startPoint.y, startPoint.z);
 
             if (Physics.Raycast(startPosition, direction.normalized, out hit, distance, collisionMask))
             {
@@ -653,7 +710,8 @@ public class AgentScript : MonoBehaviour
                 return false;
             }
         }
-        
+        catch (Exception e) { Debug.Log(e); }
+
 
         // Wenn der Raycast auf nichts trifft, ist der Weg frei
         //Debug.Log("Weg ist frei.von " + p1.ToString() + " zu " + p2.ToString());
@@ -735,7 +793,7 @@ public class AgentScript : MonoBehaviour
             foreach (Vector3 possiblePosition in possiblePositions)
             {
                 //wenn Position noch nicht überprüft (sonst entweder außerhalb oder in der gleichen NavMesh)
-                if (!checkedPositions.Contains(possiblePosition) && !sameMeshPositions.Contains(possiblePosition)&&!reachablePositions.Contains(possiblePosition))
+                if (!checkedPositions.Contains(possiblePosition) &&!reachablePositions.Contains(possiblePosition))
                 {
                     //wenn Position begehbar ist
                     if (IsPositionOnNavMesh(possiblePosition))
@@ -750,14 +808,9 @@ public class AgentScript : MonoBehaviour
                             reachablePositions.Add(possiblePosition);
                             positionsToCheck.Enqueue(possiblePosition);
                         }
-                        else
-                        {
-                            checkedPositions.Add(possiblePosition);
-                        }
                     }
                 }
-
-
+                checkedPositions.Add(possiblePosition);
             }
         }
         //färbe bei Bedarf die Objekte, die auf demselben NavMesh Bereich liegen
@@ -922,6 +975,7 @@ public class AgentScript : MonoBehaviour
 
     //erreiche alle durch Sprung erreichbaren Positionen, die auf einer anderen NavMesh liegen
     //dazu wird eine Liste übergeben, die alle Positionen innerhalb einer NavMesh Umgebung enthält. Der Umgebung, die aktuell untersucht wird
+    /*
     void constructNavMeshLinksToReachablePositions(List<Vector3> positionsInSameNavMesh, Boolean erweiterterAgent)
     {
         foreach (Vector3 position in positionsInSameNavMesh)
@@ -952,11 +1006,11 @@ public class AgentScript : MonoBehaviour
             }
         }
     }
+    */
 
     //durchlaufe mögliche durch Sprung erreichbare Felder
     //Spieler kann im Bereich 3x3 alle Felder erreichen, egal ob Höhe 1, 0 oder -1
     //in einer zentrale Richtung kann er sogar 4 Felder weit springen
-    //höhe
     void untersucheFelderDurchSprungErreichbar(Vector3 position)
     {
         for (int height = -1; height <= 1; height++)
@@ -1025,7 +1079,10 @@ public class AgentScript : MonoBehaviour
         }
         if(!GoalReachable) 
         { 
-            constructNavMeshLinksToReachablePositions(l, false); 
+            foreach(Vector3 position in l)
+            {
+                untersucheFelderDurchSprungErreichbar(position);
+            }
         }
     }
 
@@ -1064,7 +1121,8 @@ public class AgentScript : MonoBehaviour
         if (isNavMeshLinkPossible(start, end))
         {
             //Debug.Log("link");
-            // Erstelle ein neues GameObject für den NavMeshLink
+
+            // neues Gamobjekt, NavMeshLink
             GameObject linkObject = new GameObject("NavMeshLink");
             var navMeshLink = linkObject.AddComponent<NavMeshLink>();
 
@@ -1074,14 +1132,15 @@ public class AgentScript : MonoBehaviour
 
             // Optional: Weitere Einstellungen
             navMeshLink.width = 1.0f;
-            navMeshLink.costModifier = -1;
             navMeshLink.bidirectional = true;
 
             // Aktualisiere den Link
             navMeshLink.UpdateLink();
-            positionsToCheck.Enqueue(end);
-            //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
 
+            //Position als nächstes überprüfen
+            positionsToCheck.Enqueue(end);
+
+            //Debug.Log("NEUER NavMesh Link, jetzt Iteration mit NEUEM Punkt: " + end.ToString());
 
             Agent(end);
         }
@@ -1091,10 +1150,6 @@ public class AgentScript : MonoBehaviour
 
     void ErweitertCreateNavMeshLink(Vector3 start, Vector3 end, Vector3 zwischenposition)
     {
-        
-            //Link möglich
-            if (IsPositionOnNavMesh(end) && !IsPositionReachableOnNavMesh(start, end))
-            {
                 // Erstelle ein neues GameObject für den NavMeshLink
                 GameObject linkObject = new GameObject("NavMeshLink");
                 var navMeshLink = linkObject.AddComponent<NavMeshLink>();
@@ -1129,7 +1184,6 @@ public class AgentScript : MonoBehaviour
                 check(zwischenposition, start, end);
                 surface.BuildNavMesh();
 
-        }
 
     }
 
@@ -1257,7 +1311,7 @@ public class AgentScript : MonoBehaviour
                     // Führe den Raycast mit der Layer Mask durch
                     RaycastHit hit;
 
-                    int safetyCounter = 100;  // Begrenze die Anzahl der Versuche
+                    int safetyCounter = 40;  // Begrenze die Anzahl der Versuche
                     while (blockiert && safetyCounter > 0)
                     {
                         if (!statistics)
@@ -1266,23 +1320,32 @@ public class AgentScript : MonoBehaviour
                         }
                         if (Physics.Raycast(start, direction.normalized, out hit, distance, collisionMask))
                         {
-                            if (!statistics)
+                            try
                             {
-                                Debug.Log("Weg blockiert von: " + hit.collider.name);
-                            }
-                            if (hit.collider.gameObject == destroyedTile || hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject.transform == GoalTile.transform || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
-                            else
-                            {
-                                Destroy(hit.collider.gameObject.transform.parent.gameObject);
                                 if (!statistics)
                                 {
-                                    Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                                    Debug.Log("Weg blockiert von: " + hit.collider.name);
                                 }
-                                start = hit.point + direction.normalized * 0.1f;
-                                direction = end - start;
-                                distance = direction.magnitude;
-                                positions.Add(hit.collider.gameObject.transform.position);
+                                if (hit.collider.gameObject == destroyedTile || hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject.transform == GoalTile.transform || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
+                                else
+                                {
+                                    Destroy(hit.collider.gameObject.transform.parent.gameObject);
+                                    if (!statistics)
+                                    {
+                                        Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
+                                    }
+                                    start = hit.point + direction.normalized * 0.1f;
+                                    direction = end - start;
+                                    distance = direction.magnitude;
+                                    positions.Add(hit.collider.gameObject.transform.position);
+                                }
                             }
+                            catch (System.NullReferenceException e)
+                            {
+                                Debug.LogError("Eine NullReferenceException ist aufgetreten: " + e.Message);
+                                // Hier kannst du eine geeignete Reaktion hinzufügen
+                            }
+                            
                         }
                         else
                         {
