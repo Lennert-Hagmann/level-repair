@@ -498,14 +498,13 @@ public class WorldGeneration : MonoBehaviour
         }
         else if(diff == 3)
         {
-            noRepair = true;
             //Beispiel Pathfinding
             //diamond_square(9, 0, 10, -1, 2, 3, 7); createTiles(0, 0, 0);
 
-
             //Beispiel Repair
-            diamond_square(9, 0, 10, -1, 2, 3, 9); createTiles(0, 0, 0);
-            //diamond_square(17, 0, 12, -3, 3, 3, 10); createTiles(0, 0, 0);
+            //diamond_square(9, 0, 10, -1, 2, 3, 9); createTiles(0, 0, 0);
+            
+            diamond_square(17, 0, 12, -3, 3, 3, 10); createTiles(0, 0, 0);
         }
     }
 

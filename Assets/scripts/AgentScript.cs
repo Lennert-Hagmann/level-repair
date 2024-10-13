@@ -55,7 +55,6 @@ public class AgentScript : MonoBehaviour
     //gibt die erste Position zurück, die durch einen Doppelsprung erreicht werden kann
     Vector3 erweiteterSprung(Vector3 p)
     {
-
         if (!statistics) { Debug.Log("erweiteter Sprung mit Startposition " + p.ToString()); }    
         Vector3 finalPosition = new Vector3(100, 100, 100); 
         Vector3 Test = new Vector3(100, 100, 100);
@@ -93,8 +92,6 @@ public class AgentScript : MonoBehaviour
                                 }
                             }
                         }
-
-
                     }
                 // Negative x 
                 int negativeX = -x;  // z.B. -1, -2, -3
@@ -125,9 +122,7 @@ public class AgentScript : MonoBehaviour
                             }
                         }
 
-
                     }
-                
             }
 
             zwischenpos = new Vector3(p.x - 4, p.y + height, p.z);
@@ -170,6 +165,9 @@ public class AgentScript : MonoBehaviour
         if (!statistics) { Debug.LogWarning("kein erweiterter Sprung gefunden"); }
         return Test;
     }
+
+
+
     Vector3 erweiteterSprung2(Vector3 zwischenpos, Vector3 startPos)
     {
         if (!statistics) { Debug.Log("erweiteter Sprung mit Zwischenposition " + zwischenpos.ToString()); }
@@ -1264,7 +1262,7 @@ public class AgentScript : MonoBehaviour
             
 
             // Aktualisiere die Position, um direkt hinter dem entfernten Objekt zu starten
-            position = hit.point + Vector3.up * 0.01f; // Ein kleiner Abstand, um sicherzustellen, dass du nicht immer das gleiche Objekt triffst
+            position = hit.point + Vector3.up * 0.01f; // Ein kleiner Abstand, um sicherzustellen, dass nicht immer das gleiche Objekt getroffen wird
         }
 
         List<Vector3> CreatedPositions = new List<Vector3>();
@@ -1299,16 +1297,11 @@ public class AgentScript : MonoBehaviour
             {
                 for (int height = 0; height <= 3; height++)
                 {
-                    //verschiebe nach oben, damit er nicht mit den Objekten auf Ebene 0 oder 1 kollidiert (diese sind für den Spieler überquerbar)
+                    //verschiebe Vektor nach oben
                     Vector3 start = new Vector3(startpos.x + x, startpos.y + 1.1f + height, startpos.z);
                     Vector3 end = new Vector3(endpos.x + x, endpos.y + 1.1f + height, endpos.z);
-
-                    // Berechne die Richtung vom Startpunkt zum Endpunkt
                     Vector3 direction = end - start;
-
-                    // Berechne die Distanz zwischen den beiden Punkten
                     float distance = direction.magnitude;
-                    // Führe den Raycast mit der Layer Mask durch
                     RaycastHit hit;
 
                     int safetyCounter = 40;  // Begrenze die Anzahl der Versuche
@@ -1329,6 +1322,7 @@ public class AgentScript : MonoBehaviour
                                 if (hit.collider.gameObject == destroyedTile || hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject.transform == GoalTile.transform || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
                                 else
                                 {
+                                    //zerstöre das getroffene Objekte
                                     Destroy(hit.collider.gameObject.transform.parent.gameObject);
                                     if (!statistics)
                                     {
@@ -1340,12 +1334,8 @@ public class AgentScript : MonoBehaviour
                                     positions.Add(hit.collider.gameObject.transform.position);
                                 }
                             }
-                            catch (System.NullReferenceException e)
-                            {
-                                Debug.LogError("Eine NullReferenceException ist aufgetreten: " + e.Message);
-                                // Hier kannst du eine geeignete Reaktion hinzufügen
-                            }
-                            
+                            //um Tests nicht abzubrechen
+                            catch (System.NullReferenceException e) { Debug.LogError("Eine NullReferenceException ist aufgetreten: " + e.Message); }
                         }
                         else
                         {
@@ -1353,7 +1343,6 @@ public class AgentScript : MonoBehaviour
                         }
                         safetyCounter--;
                     }
-
                     if (safetyCounter == 0)
                     {
                         Debug.LogError("Endlosschleife verhindert");
@@ -1395,7 +1384,7 @@ public class AgentScript : MonoBehaviour
                         if (hit.collider.gameObject == null || hit.collider == null || hit.collider.gameObject.transform.parent.gameObject == null || hit.collider.gameObject.transform.parent.gameObject == GoalTile) { }
                         else
                         {
-                            Destroy(hit.collider.gameObject.transform.parent.gameObject); 
+                            Destroy(hit.collider.gameObject.transform.parent.gameObject);
                             if (!statistics)
                             {
                                 Debug.Log("Entferne Objekt: " + hit.collider.gameObject.transform.position);
@@ -1421,8 +1410,7 @@ public class AgentScript : MonoBehaviour
                 blockiert = true;
             }
         }
-
-
+        //füge an den gelöschten Stellen andere Objekte ein, um dem Spieler die Löschung anzuzeigen
         List<Vector3> CreatedPositions = new List<Vector3>();
         foreach (Vector3 pos in positions)
         {
@@ -1435,7 +1423,6 @@ public class AgentScript : MonoBehaviour
                 Collider objectCollider = ob.GetComponent<Collider>();
                 if (objectCollider != null)
                 {
-                    //Debug.LogWarning("TESTTESTTEST");
                     objectCollider.enabled = false; // Deaktiviert den Collider
                 }
                 ob.GetComponent<Collider>().enabled = false;
